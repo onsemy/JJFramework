@@ -20,10 +20,11 @@ Unity에서 자주 사용했던, 유용했던 코드를 모아놓은 프레임�
 - `UnityEngine.GameObject` 확장
 - `UnityEngine.MonoBehaviour` 확장
 - `string` 확장
+- `List<T>` 확장
 
 #### UI
 
-- `BaseDialog` 및 `DialogManager`
+- `BaseUI` 및 `UIManager`
 
 #### Resource
 
