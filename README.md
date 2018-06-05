@@ -12,7 +12,7 @@ Unity로 개발하다보면 반복해서 쓰는 코드들이 종종 있었습니
 
 Unity 프로젝트의 Assets 폴더 안에 적절한 곳에
 
-> `git submodule https://github.com/onsemy/JJFramework.git JJFramework`
+> `git submodule add https://github.com/onsemy/JJFramework.git JJFramework`
 
 를 실행하거나, 다운로드 받아서 넣어주세요!
 
