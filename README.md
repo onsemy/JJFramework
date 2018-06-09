@@ -20,6 +20,10 @@ Unity 프로젝트의 Assets 폴더 안에 적절한 곳에
 
 - Unity 2017.3.1f1 이상 (.NET 4.6)
 
+### 의존성 패키지
+
+- [`UniRx`](https://github.com/neuecc/UniRx): Unity 프로젝트 내에 넣어주세요!
+
 ## 주요 기능
 
 ### Runtime
