@@ -9,7 +9,7 @@ using UniRx;
 namespace JJFramework.Runtime.Extension
 {
     [DisallowMultipleComponent]
-    public class ExMonoBehaviour : MonoBehaviour
+    public abstract class ExMonoBehaviour : MonoBehaviour
     {
         protected virtual void Awake()
         {
