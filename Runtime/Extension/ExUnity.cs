@@ -121,6 +121,16 @@
         {
             return c.transform.GetSiblingIndex();
         }
+
+        public static void SetColor(this Image image, Color color)
+        {
+            image.color = color;
+        }
+
+        public static void SetColor(this Image image, float r = 1f, float g = 1f, float b = 1f, float a = 1f)
+        {
+            image.color = new Color(r, g, b, a);
+        }
     }
 
     public static class ExAttributeUnity
