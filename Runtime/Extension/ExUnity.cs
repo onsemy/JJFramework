@@ -111,6 +111,16 @@
             c = new Color(c.r, c.g, c.b, alpha);
             return c;
         }
+
+        public static void SetSiblingIndex(this Component c, int index)
+        {
+            c.transform.SetSiblingIndex(index);
+        }
+
+        public static int GetSiblingIndex(this Component c)
+        {
+            return c.transform.GetSiblingIndex();
+        }
     }
 
     public static class ExAttributeUnity
