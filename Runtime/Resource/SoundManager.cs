@@ -51,7 +51,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(clip.ToString().ToLower());
+                var audio = _resourceLoader.Load<AudioClip>(clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
@@ -92,6 +92,11 @@ namespace JJFramework.Runtime.Resource
             _musicSource.loop = isLoop;
             _musicSource.volume = volume;
             _musicSource.Play();
+        }
+
+        public void SetBGMVolume(float volume)
+        {
+            _musicSource.volume = volume;
         }
 
         public void StopEffect(int index)
