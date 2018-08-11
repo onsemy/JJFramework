@@ -22,6 +22,22 @@ namespace JJFramework.Editor.Batch
             UnityEngine.PlayerPrefs.DeleteAll();
         }
 
+        [MenuItem("@JJFramework/Build Android")]
+        public static void BuildAndroid()
+        {
+            var scenes = EditorBuildSettings.scenes;
+            List<string> sceneList = new List<string>();
+
+            foreach (var scene in scenes)
+            {
+                if (scene.enabled)
+                    sceneList.Add(scene.path);
+            }
+
+            var sceneArray = sceneList.ToArray();
+            BuildPipeline.BuildPlayer(sceneArray, "UnityAndroid.apk", BuildTarget.Android, BuildOptions.None);
+        }
+
         [MenuItem("@JJFramework/Build LocalDB")]
         public static async void BuildLocalDB()
         {
