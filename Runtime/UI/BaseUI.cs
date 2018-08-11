@@ -4,7 +4,7 @@ using JJFramework.Runtime.Extension;
 namespace JJFramework.Runtime.UI
 {
     [DisallowMultipleComponent]
-    public abstract class BaseUI : MonoBehaviour
+    public abstract class BaseUI : ExMonoBehaviour
     {
         public int id
         {
@@ -20,9 +20,9 @@ namespace JJFramework.Runtime.UI
             isCalledCloseAction = true;
         }
 
-        protected virtual void Awake()
+        protected override void Awake()
         {
-            this.LoadComponents();
+            base.Awake();
 
             id = this.GetHashCode(); // TODO(jjo): GenerateUID Function
             
