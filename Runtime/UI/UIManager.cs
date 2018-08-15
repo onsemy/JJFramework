@@ -5,7 +5,7 @@ using System.Linq;
 using JJFramework.Runtime.Extension;
 using JJFramework.Runtime.Resource;
 
-namespace JJFramework.Runtime.UI.Dialog
+namespace JJFramework.Runtime.UI
 {
     [DisallowMultipleComponent]
     public class UIManager
