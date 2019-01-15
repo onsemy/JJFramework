@@ -15,7 +15,7 @@ namespace JJFramework.Runtime.Resource
     [DisallowMultipleComponent]
     public class DataLoader
     {
-        public static T Get<T>()
+        public static T Load<T>()
         {
             string fileName = $"{typeof(T).Name}.bson";
             string destinationPath = System.IO.Path.Combine(Application.persistentDataPath, fileName);
@@ -73,9 +73,9 @@ namespace JJFramework.Runtime.Resource
             return default(T);
         }
 
-        public static bool Get<T>(out T result)
+        public static bool Load<T>(out T result)
         {
-            result = Get<T>();
+            result = Load<T>();
 
             return result != null;
         }
