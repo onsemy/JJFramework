@@ -29,6 +29,7 @@ namespace JJFramework.Runtime.UI
         //private Stack<BaseUI> __uiStackList = new Stack<BaseUI>();
 
         private Transform __uiRoot;
+        private Canvas __canvas;
 
         public void Init(IResourceLoader loader, Vector2 screenSize, int sortingOrder = 100)
         {
@@ -36,10 +37,10 @@ namespace JJFramework.Runtime.UI
 
             GameObject obj = new GameObject(nameof(UIManager));
 
-            var canvas = obj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = Camera.main;
-            canvas.sortingOrder = sortingOrder;
+            __canvas = obj.AddComponent<Canvas>();
+            __canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            __canvas.worldCamera = Camera.main;
+            __canvas.sortingOrder = sortingOrder;
 
             var scaler = obj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -74,6 +75,11 @@ namespace JJFramework.Runtime.UI
 
             //__uiStackList.Push(ui);
             __uiStackList.Add(new UIPack(ui.id, ui));
+
+            if (__canvas.worldCamera == null)
+            {
+                __canvas.worldCamera = Camera.main;
+            }
 
             return ui;
         }
