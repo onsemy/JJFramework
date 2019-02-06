@@ -17,7 +17,6 @@ namespace JJFramework.Editor.Extension
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            DrawDefaultInspector();
 
             var component = (ExImage) target;
             component.alpha = EditorGUILayout.Slider("Alpha", component.alpha, 0f, 1f);
