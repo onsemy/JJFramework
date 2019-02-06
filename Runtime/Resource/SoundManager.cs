@@ -86,6 +86,12 @@ namespace JJFramework.Runtime.Resource
             return current;
         }
 
+        public void PlayBGM(string clip, bool isLoop = true, float volume = 1f)
+        {
+            LoadClip(clip);
+            PlayBGM(_clipsDic[clip], isLoop, volume);
+        }
+
         public void PlayBGM(AudioClip clip, bool isLoop = true, float volume = 1f)
         {
             _musicSource.clip = clip;
