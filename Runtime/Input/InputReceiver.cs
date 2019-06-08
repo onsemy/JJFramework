@@ -7,7 +7,7 @@ namespace JJFramework.Runtime.Input
     {
         private Dictionary<string, InputBindParam> _bindInfoGroup;
 
-        public void BindButtonEvent(in string bindName, in InputBindParam bindParam)
+        public void BindButtonEvent(string bindName, InputBindParam bindParam)
         {
             if(this._bindInfoGroup.ContainsKey(bindName) == true)
             {
@@ -17,7 +17,7 @@ namespace JJFramework.Runtime.Input
             this._bindInfoGroup.Add(bindName, bindParam);
         }
 
-        public void UnBindButtonEvent(in string bindName)
+        public void UnBindButtonEvent(string bindName)
         {
             if (this._bindInfoGroup.ContainsKey(bindName) == true)
             {

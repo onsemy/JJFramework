@@ -1,7 +1,7 @@
 ﻿namespace JJFramework.Runtime.Input
 {
-    public delegate void DelegateOnButton(in bool inButtonDown);
-    public delegate void DelegateOnAxis(in float inValue);
+    public delegate void DelegateOnButton(bool inButtonDown);
+    public delegate void DelegateOnAxis(float inValue);
 
     public class InputBindParam
     {
@@ -15,12 +15,12 @@
         public bool isValidButtonEvent { get { return this._buttonEvent != null; } }
         public bool isValidAxisEvent { get { return this._axisEvent != null; } }
 
-        public InputBindParam(in DelegateOnButton newEvent)
+        public InputBindParam(DelegateOnButton newEvent)
         {
             this._buttonEvent = newEvent;
             this._axisEvent = null;
         }
-        public InputBindParam(in DelegateOnAxis newEvent)
+        public InputBindParam(DelegateOnAxis newEvent)
         {
             this._axisEvent = newEvent;
             this._buttonEvent = null;
