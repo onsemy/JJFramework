@@ -5,9 +5,9 @@ namespace JJFramework.Runtime.Input
 {
     public interface IInputManagerInterface
     {
-        void BindButtonEvent(in string bindName, in DelegateOnButton newEvent);
-        void BindAxisEvent(in string bindName, in DelegateOnAxis newEvent);
-        void UnBindButtonEvent(in string bindName);
+        void BindButtonEvent(string bindName, DelegateOnButton newEvent);
+        void BindAxisEvent(string bindName, DelegateOnAxis newEvent);
+        void UnBindButtonEvent(string bindName);
     }
 
     public class InputManager : IInputManagerInterface
@@ -24,7 +24,7 @@ namespace JJFramework.Runtime.Input
         }
 
         // Begin IInputManagerInterface Interface
-        public void BindButtonEvent(in string bindName, in DelegateOnButton newEvent)
+        public void BindButtonEvent(string bindName, DelegateOnButton newEvent)
         {
             if (this._inputReceiver == null || newEvent == null)
                 return;
@@ -33,7 +33,7 @@ namespace JJFramework.Runtime.Input
             this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
-        public void BindAxisEvent(in string bindName, in DelegateOnAxis newEvent)
+        public void BindAxisEvent(string bindName, DelegateOnAxis newEvent)
         {
             if (this._inputReceiver == null || newEvent == null)
                 return;
@@ -42,7 +42,7 @@ namespace JJFramework.Runtime.Input
             this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
-        public void UnBindButtonEvent(in string bindName)
+        public void UnBindButtonEvent(string bindName)
         {
             if (this._inputReceiver == null)
                 return;
