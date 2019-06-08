@@ -1,92 +1,87 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace JJFramework.Runtime.Input
 {
     public class InputReceiver : MonoBehaviour
     {
-        public void SetController(IControllerInterface inController)
+        public void BindButtonEvent(in string inBindName, in InputBindParam inBindParam)
         {
-            m_controller = inController;
+            if(BindInfoGroup.ContainsKey(inBindName) == true)
+            {
+                Debug.LogWarningFormat("Already Binding Info Bind Name : {0}", inBindName);
+                return;
+            }
+            BindInfoGroup.Add(inBindName, inBindParam);
+        }
+
+        public void UnBindButtonEvent(in string inBindName)
+        {
+            if (BindInfoGroup.ContainsKey(inBindName) == true)
+            {
+                Debug.LogWarningFormat("Not Binding Info Bind Name : {0}", inBindName);
+                return;
+            }
+            BindInfoGroup.Remove(inBindName);
         }
 
         void Awake()
         {
             DontDestroyOnLoad(this);
             name = "InputReceiver";
-
-            InputKeyGroup = new string[35];
-            InputKeyGroup[0] = "Horizontal";
-            InputKeyGroup[1] = "Vertical";
-            InputKeyGroup[2] = "MouseX";
-            InputKeyGroup[3] = "MouseY";
-            InputKeyGroup[4] = "MouseScrollWheel";
-            InputKeyGroup[5] = "1";
-            InputKeyGroup[6] = "2";
-            InputKeyGroup[7] = "3";
-            InputKeyGroup[8] = "4";
-            InputKeyGroup[9] = "5";
-            InputKeyGroup[10] = "6";
-            InputKeyGroup[11] = "7";
-            InputKeyGroup[12] = "8";
-            InputKeyGroup[13] = "9";
-            InputKeyGroup[14] = "10";
-            InputKeyGroup[15] = "11";
-            InputKeyGroup[16] = "12";
-            InputKeyGroup[17] = "13";
-            InputKeyGroup[18] = "14";
-            InputKeyGroup[19] = "15";
-            InputKeyGroup[20] = "16";
-            InputKeyGroup[21] = "17";
-            InputKeyGroup[22] = "18";
-            InputKeyGroup[23] = "19";
-            InputKeyGroup[24] = "20";
-            InputKeyGroup[25] = "21";
-            InputKeyGroup[26] = "22";
-            InputKeyGroup[27] = "23";
-            InputKeyGroup[28] = "24";
-            InputKeyGroup[29] = "25";
-            InputKeyGroup[30] = "26";
-            InputKeyGroup[31] = "27";
-            InputKeyGroup[32] = "28";
-            InputKeyGroup[33] = "29";
-            InputKeyGroup[34] = "30";
+            BindInfoGroup = new Dictionary<string, InputBindParam>();
         }
 
         void OnDestroy()
         {
-            m_controller = null;
+            BindInfoGroup.Clear();
         }
 
         void Update()
         {
-            if (m_controller == null)
-                return;
-
-            foreach(string element in InputKeyGroup)
+            foreach(KeyValuePair<string, InputBindParam> element in BindInfoGroup)
             {
-                if (element == null)
+                string currentMethodKey = element.Value.methodName;
+                string localBindName = element.Key;
+                object localTarget = element.Value.target;
+                if (localTarget == null)
                     continue;
-                string currentMethodKey = "On" + element;
-                System.Reflection.MethodInfo localMethodInfo = typeof(IControllerInterface).GetMethod(currentMethodKey);
+                System.Reflection.MethodInfo localMethodInfo = localTarget.GetType().GetMethod(currentMethodKey);
                 if (localMethodInfo == null)
                     continue;
                 System.Reflection.ParameterInfo[] localParameterInfo = localMethodInfo.GetParameters();
-                bool bisAxisMethod = localParameterInfo.Length > 0;
-                if(bisAxisMethod == true)
+                if (localParameterInfo.Length <= 0)
+                    continue;
+                if (localParameterInfo[0].ParameterType == typeof(float))
                 {
-                    float localValue = UnityEngine.Input.GetAxis(element);
+                    float localValue = UnityEngine.Input.GetAxis(localBindName);
                     object[] localParams = new object[1];
                     localParams[0] = localValue;
-                    localMethodInfo.Invoke(m_controller, localParams);
+                    localMethodInfo.Invoke(localTarget, localParams);
                 }
-                else
+                else if (localParameterInfo[0].ParameterType == typeof(bool))
                 {
-                    localMethodInfo.Invoke(m_controller, null);
+                    
+                    System.Action<bool> localButtonAction =
+                        (bool inButtonDown) =>
+                        {
+                            object[] localParams = new object[1];
+                            localParams[0] = inButtonDown;
+                            localMethodInfo.Invoke(localTarget, localParams);
+                        };
+
+                    if (UnityEngine.Input.GetButtonDown(localBindName) == true)
+                    {
+                        localButtonAction(true);
+                    }
+                    else if (UnityEngine.Input.GetButtonUp(localBindName) == true)
+                    {
+                        localButtonAction(false);
+                    }
                 }
             }
         }
 
-        IControllerInterface m_controller = null;
-        private string [] InputKeyGroup;
+        private Dictionary<string, InputBindParam> BindInfoGroup;
     }
 }

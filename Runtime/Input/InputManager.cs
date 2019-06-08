@@ -5,7 +5,8 @@ namespace JJFramework.Runtime.Input
 {
     public interface IInputManagerInterface
     {
-        void SetController(in IControllerInterface inController);
+        void BindButtonEvent(in string inBindName, in object inTarget, in string inMethodName);
+        void UnBindButtonEvent(in string inBindName);
     }
 
     public class InputManager : IInputManagerInterface
@@ -19,12 +20,20 @@ namespace JJFramework.Runtime.Input
         }
 
         // Begin IInputManagerInterface Interface
-        public void SetController(in IControllerInterface inController)
+        public void BindButtonEvent(in string inBindName, in object inTarget, in string inMethodName)
+        {
+            if (m_inputReceiver == null || inTarget == null)
+                return;
+
+            InputBindParam newParam = new InputBindParam(inTarget, inMethodName);
+            m_inputReceiver.BindButtonEvent(inBindName, newParam);
+        }
+
+        public void UnBindButtonEvent(in string inBindName)
         {
             if (m_inputReceiver == null)
                 return;
-
-            m_inputReceiver.SetController(inController);
+            m_inputReceiver.UnBindButtonEvent(inBindName);
         }
         // ~~End IInputManagerInterface Interface
 
