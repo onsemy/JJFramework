@@ -5,83 +5,63 @@ namespace JJFramework.Runtime.Input
 {
     public class InputReceiver : MonoBehaviour
     {
-        public void BindButtonEvent(in string inBindName, in InputBindParam inBindParam)
+        private Dictionary<string, InputBindParam> _bindInfoGroup;
+
+        public void BindButtonEvent(in string bindName, in InputBindParam bindParam)
         {
-            if(BindInfoGroup.ContainsKey(inBindName) == true)
+            if(this._bindInfoGroup.ContainsKey(bindName) == true)
             {
-                Debug.LogWarningFormat("Already Binding Info Bind Name : {0}", inBindName);
+                Debug.LogWarningFormat("Already Binding Info Bind Name : {0}", bindName);
                 return;
             }
-            BindInfoGroup.Add(inBindName, inBindParam);
+            this._bindInfoGroup.Add(bindName, bindParam);
         }
 
-        public void UnBindButtonEvent(in string inBindName)
+        public void UnBindButtonEvent(in string bindName)
         {
-            if (BindInfoGroup.ContainsKey(inBindName) == true)
+            if (this._bindInfoGroup.ContainsKey(bindName) == true)
             {
-                Debug.LogWarningFormat("Not Binding Info Bind Name : {0}", inBindName);
+                Debug.LogWarningFormat("Not Binding Info Bind Name : {0}", bindName);
                 return;
             }
-            BindInfoGroup.Remove(inBindName);
+            this._bindInfoGroup.Remove(bindName);
         }
 
         void Awake()
         {
             DontDestroyOnLoad(this);
             name = "InputReceiver";
-            BindInfoGroup = new Dictionary<string, InputBindParam>();
+            this._bindInfoGroup = new Dictionary<string, InputBindParam>();
         }
 
         void OnDestroy()
         {
-            BindInfoGroup.Clear();
+            this._bindInfoGroup.Clear();
         }
 
         void Update()
         {
-            foreach(KeyValuePair<string, InputBindParam> element in BindInfoGroup)
+            foreach(KeyValuePair<string, InputBindParam> element in this._bindInfoGroup)
             {
-                string currentMethodKey = element.Value.methodName;
-                string localBindName = element.Key;
-                object localTarget = element.Value.target;
-                if (localTarget == null)
-                    continue;
-                System.Reflection.MethodInfo localMethodInfo = localTarget.GetType().GetMethod(currentMethodKey);
-                if (localMethodInfo == null)
-                    continue;
-                System.Reflection.ParameterInfo[] localParameterInfo = localMethodInfo.GetParameters();
-                if (localParameterInfo.Length <= 0)
-                    continue;
-                if (localParameterInfo[0].ParameterType == typeof(float))
+                string bindName = element.Key;
+                InputBindParam currentParam = element.Value;
+                if (currentParam.isAixsEvent == true && currentParam.isValidAixsEvent == true)
                 {
-                    float localValue = UnityEngine.Input.GetAxis(localBindName);
-                    object[] localParams = new object[1];
-                    localParams[0] = localValue;
-                    localMethodInfo.Invoke(localTarget, localParams);
+                    float localValue = UnityEngine.Input.GetAxis(bindName);
+                    currentParam.aixsEvent(localValue);
                 }
-                else if (localParameterInfo[0].ParameterType == typeof(bool))
-                {
-                    
-                    System.Action<bool> localButtonAction =
-                        (bool inButtonDown) =>
-                        {
-                            object[] localParams = new object[1];
-                            localParams[0] = inButtonDown;
-                            localMethodInfo.Invoke(localTarget, localParams);
-                        };
-
-                    if (UnityEngine.Input.GetButtonDown(localBindName) == true)
+                else if (currentParam.isButtonEvent == true && currentParam.isValidButtonEvent == true)
+                {                    
+                    if (UnityEngine.Input.GetButtonDown(bindName) == true)
                     {
-                        localButtonAction(true);
+                        currentParam.buttonEvent(true);
                     }
-                    else if (UnityEngine.Input.GetButtonUp(localBindName) == true)
+                    else if (UnityEngine.Input.GetButtonUp(bindName) == true)
                     {
-                        localButtonAction(false);
+                        currentParam.buttonEvent(false);
                     }
                 }
             }
         }
-
-        private Dictionary<string, InputBindParam> BindInfoGroup;
     }
 }

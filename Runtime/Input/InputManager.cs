@@ -5,12 +5,16 @@ namespace JJFramework.Runtime.Input
 {
     public interface IInputManagerInterface
     {
-        void BindButtonEvent(in string inBindName, in object inTarget, in string inMethodName);
-        void UnBindButtonEvent(in string inBindName);
+        void BindButtonEvent(in string bindName, in DelegateOnButton newEvent);
+        void BindAixsEvent(in string bindName, in DelegateOnAixs newEvent);
+        void UnBindButtonEvent(in string bindName);
     }
 
     public class InputManager : IInputManagerInterface
     {
+        static InputManager _instance = null;
+        InputReceiver _inputReceiver = null;
+
         static public IInputManagerInterface instance
         {
             get
@@ -20,44 +24,49 @@ namespace JJFramework.Runtime.Input
         }
 
         // Begin IInputManagerInterface Interface
-        public void BindButtonEvent(in string inBindName, in object inTarget, in string inMethodName)
+        public void BindButtonEvent(in string bindName, in DelegateOnButton newEvent)
         {
-            if (m_inputReceiver == null || inTarget == null)
+            if (this._inputReceiver == null || newEvent == null)
                 return;
 
-            InputBindParam newParam = new InputBindParam(inTarget, inMethodName);
-            m_inputReceiver.BindButtonEvent(inBindName, newParam);
+            InputBindParam newParam = new InputBindParam(newEvent);
+            this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
-        public void UnBindButtonEvent(in string inBindName)
+        public void BindAixsEvent(in string bindName, in DelegateOnAixs newEvent)
         {
-            if (m_inputReceiver == null)
+            if (this._inputReceiver == null || newEvent == null)
                 return;
-            m_inputReceiver.UnBindButtonEvent(inBindName);
+
+            InputBindParam newParam = new InputBindParam(newEvent);
+            this._inputReceiver.BindButtonEvent(bindName, newParam);
+        }
+
+        public void UnBindButtonEvent(in string bindName)
+        {
+            if (this._inputReceiver == null)
+                return;
+            this._inputReceiver.UnBindButtonEvent(bindName);
         }
         // ~~End IInputManagerInterface Interface
 
         private InputManager()
         {
-            Debug.Log("Create Input Receiver");
-            m_inputReceiver = new GameObject().AddComponent<InputReceiver>();
+            this._inputReceiver = new GameObject().AddComponent<InputReceiver>();
         }
 
         ~InputManager()
         {
-            m_inputReceiver = null;
+            this._inputReceiver = null;
         }
 
         static InputManager GetInstance()
         {
-            if(m_instance == null)
+            if(_instance == null)
             {
-                m_instance = new InputManager();
+                _instance = new InputManager();
             }
-            return m_instance;
+            return _instance;
         }
-
-        static InputManager m_instance = null;
-        InputReceiver m_inputReceiver = null;
     }
 }
