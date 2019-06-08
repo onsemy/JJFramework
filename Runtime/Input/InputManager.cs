@@ -6,7 +6,7 @@ namespace JJFramework.Runtime.Input
     public interface IInputManagerInterface
     {
         void BindButtonEvent(in string bindName, in DelegateOnButton newEvent);
-        void BindAixsEvent(in string bindName, in DelegateOnAixs newEvent);
+        void BindAxisEvent(in string bindName, in DelegateOnAxis newEvent);
         void UnBindButtonEvent(in string bindName);
     }
 
@@ -33,7 +33,7 @@ namespace JJFramework.Runtime.Input
             this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
-        public void BindAixsEvent(in string bindName, in DelegateOnAixs newEvent)
+        public void BindAxisEvent(in string bindName, in DelegateOnAxis newEvent)
         {
             if (this._inputReceiver == null || newEvent == null)
                 return;

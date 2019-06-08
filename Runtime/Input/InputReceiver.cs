@@ -45,10 +45,10 @@ namespace JJFramework.Runtime.Input
             {
                 string bindName = element.Key;
                 InputBindParam currentParam = element.Value;
-                if (currentParam.isAixsEvent == true && currentParam.isValidAixsEvent == true)
+                if (currentParam.isAxisEvent == true && currentParam.isValidAxisEvent == true)
                 {
                     float localValue = UnityEngine.Input.GetAxis(bindName);
-                    currentParam.aixsEvent(localValue);
+                    currentParam.axisEvent(localValue);
                 }
                 else if (currentParam.isButtonEvent == true && currentParam.isValidButtonEvent == true)
                 {                    
