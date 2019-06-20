@@ -41,6 +41,9 @@ namespace JJFramework.Runtime.UI
             __canvas.renderMode = RenderMode.ScreenSpaceCamera;
             __canvas.worldCamera = Camera.main;
             __canvas.sortingOrder = sortingOrder;
+            // NOTE(JJO): Spine - SkeletonGraphic 덕분에 기본값이 100인 것을 1로 변경함.
+            // 추후 SkeletonGraphic 버그(?)가 고쳐지면 변경될 수 있음.
+            __canvas.referencePixelsPerUnit = 1f;
 
             var scaler = obj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
