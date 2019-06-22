@@ -54,7 +54,6 @@ namespace JJFramework.Runtime.Resource
 
             if (File.Exists(destinationPath) == true)
             {
-                var bf = new BinaryFormatter();
                 using (var file = File.Open(destinationPath, FileMode.Open))
                 {
                     var reader = new BsonReader(file);
