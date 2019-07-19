@@ -14,12 +14,10 @@ namespace JJFramework.Runtime.UI
 
         //[ComponentPath] protected Button btnClose;
 
-        public bool isCalledCloseAction { get; protected set; }
         private System.Action<BaseUI> _preCloseAction;
 
         public virtual void CloseAction()
         {
-            isCalledCloseAction = true;
             _preCloseAction?.Invoke(this);
 
             this.Hide();

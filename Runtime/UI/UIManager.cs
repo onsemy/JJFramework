@@ -75,6 +75,7 @@ namespace JJFramework.Runtime.UI
             }
 
             var ui = uiObject.AddComponent<T>();
+            ui.RegistPreCloseAction(RemoveFromStack);
 
             //__uiStackList.Push(ui);
             __uiStackList.Add(new UIPack(ui.id, ui));
@@ -89,24 +90,63 @@ namespace JJFramework.Runtime.UI
 
         public BaseUI currentDialog => __uiStackList.Count > 0 ? __uiStackList.LastOrDefault()?.ui : null;
 
-        public BaseUI Close(int index = -1, bool withoutCloseAction = false)
+        private void RemoveFromStack(BaseUI ui)
         {
             if (__uiStackList.Count == 0)
             {
                 Debug.LogError("Stack is EMPTY!");
-                return null;
+                return;
+            }
+
+            var findUIPack = __uiStackList.Find(x => ReferenceEquals(x.ui, ui));
+            if (ReferenceEquals(findUIPack, null) == true)
+            {
+                Debug.LogError("ui is NOT IN Stack!");
+                return;
+            }
+
+            __uiStackList.Remove(findUIPack);
+        }
+
+        public void CloseWithID(int id)
+        {
+            if (__uiStackList.Count == 0)
+            {
+                Debug.LogError("Stack is EMPTY!");
+                return;
+            }
+
+            var uiPack = __uiStackList.Find(x => x.id == id);
+            if (ReferenceEquals(uiPack, null))
+            {
+                Debug.LogError("Cannot find UIPack!");
+                return;
+            }
+
+            uiPack.ui.CloseAction();
+        }
+
+        /// <summary>
+        /// 일반적 형태의 UI Close 함수. 인자를 포함하지 않으면 Stack의 최상단부터 닫는다.
+        /// </summary>
+        /// <param name="index">기본값은 -1. 이외의 값이 들어간다면 Stack에서 해당 Index의 UIPack을 찾아서 닫는다.</param>
+        public void Close(int index = -1)
+        {
+            if (__uiStackList.Count == 0)
+            {
+                Debug.LogError("Stack is EMPTY!");
+                return;
             }
 
             BaseUI ui = null;
+            if (index < -1 || __uiStackList.Count <= index)
+            {
+                Debug.LogError($"INVALID index!: {index}");
+                return;
+            }
+
             if (index == -1)
             {
-                if (__uiStackList.LastOrDefault() == null)
-                {
-                    Debug.LogError("Current Position is NULL!");
-                    return null;
-                }
-
-                //ui = __uiStackList.Pop();
                 ui = __uiStackList.PopLast()?.ui;
             }
             else
@@ -114,26 +154,14 @@ namespace JJFramework.Runtime.UI
                 ui = __uiStackList.Pop(index)?.ui;
             }
 
-            if (withoutCloseAction == false &&
-                ui != null &&
-                ui.isCalledCloseAction == false)
-            {
-                ui.CloseAction();
-            }
-
-            return ui;
+            ui?.CloseAction();
         }
 
-        public void CloseAll(bool withoutCloseAction = false, bool doDestroy = false)
+        public void CloseAll()
         {
             while (__uiStackList.Count > 0)
             {
-                var dialog = Close(withoutCloseAction: withoutCloseAction);
-                if (doDestroy &&
-                    dialog != null)
-                {
-                    GameObject.Destroy(dialog.gameObject);
-                }
+                Close();
             }
         }
 
