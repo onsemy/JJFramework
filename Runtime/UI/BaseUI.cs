@@ -14,11 +14,11 @@ namespace JJFramework.Runtime.UI
 
         //[ComponentPath] protected Button btnClose;
 
-        private System.Action<BaseUI> _preCloseAction;
+        protected System.Action<BaseUI> preCloseAction;
 
         public virtual void CloseAction()
         {
-            _preCloseAction?.Invoke(this);
+            preCloseAction?.Invoke(this);
 
             this.Hide();
 
@@ -27,7 +27,7 @@ namespace JJFramework.Runtime.UI
 
         public void RegistPreCloseAction(System.Action<BaseUI> action)
         {
-            _preCloseAction = action;
+            preCloseAction = action;
         }
 
         protected override void Awake()
