@@ -31,6 +31,7 @@ namespace JJFramework.Runtime.Resource
                     if (string.IsNullOrEmpty(www.error))
                     {
                         System.IO.File.WriteAllBytes(destinationPath, www.bytes);
+                        Debug.Log($"Completed to copy: {fileName}");
                     }
                     else
                     {
@@ -44,6 +45,7 @@ namespace JJFramework.Runtime.Resource
                     {
                         //copy file - alle systems except Android
                         System.IO.File.Copy(sourcePath, destinationPath, true);
+                        Debug.Log($"Completed to copy: {fileName}");
                     }
                     else
                     {
@@ -59,6 +61,8 @@ namespace JJFramework.Runtime.Resource
                     var reader = new BsonReader(file);
                     var serializer = new JsonSerializer();
                     T result = serializer.Deserialize<T>(reader);
+
+                    Debug.Log($"Completed to load: {fileName}");
 
                     return result;
                 }
