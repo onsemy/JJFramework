@@ -163,6 +163,12 @@ namespace JJFramework.Runtime.UI
             {
                 Close();
             }
+
+            // NOTE(JJO): Stack에서 다 지웠음에도 남아있을 수도 있어서 추가로 남겨둠
+            foreach (Transform child in __uiRoot)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
         }
 
         private void OnDestroy()
