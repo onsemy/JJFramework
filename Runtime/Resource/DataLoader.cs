@@ -22,7 +22,7 @@ namespace JJFramework.Runtime.Resource
             string sourcePath = System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
 
             //if DB does not exist in persistent data folder (folder "Documents" on iOS) or source DB is newer then copy it
-            if (!System.IO.File.Exists(destinationPath) || (System.IO.File.GetLastWriteTimeUtc(sourcePath) > System.IO.File.GetLastWriteTimeUtc(destinationPath)))
+            //if (!System.IO.File.Exists(destinationPath) || (System.IO.File.GetLastWriteTimeUtc(sourcePath) > System.IO.File.GetLastWriteTimeUtc(destinationPath)))
             {
                 if (sourcePath.Contains("://"))
                 {// Android  
