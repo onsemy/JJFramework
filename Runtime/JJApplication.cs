@@ -27,5 +27,13 @@ namespace JJFramework.Runtime
 				behaviour.ManagedUpdate();
 			}
 		}
+
+		private void LateUpdate()
+		{
+			foreach (var behaviour in _behaviourList)
+			{
+				behaviour.ManagedLateUpdate();
+			}
+		}
 	}
 }

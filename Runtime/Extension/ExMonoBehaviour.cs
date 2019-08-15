@@ -53,6 +53,7 @@ namespace JJFramework.Runtime.Extension
         }
 
         public abstract void ManagedUpdate();
+        public abstract void ManagedLateUpdate();
 
         private void OnEnable()
         {
