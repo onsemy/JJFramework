@@ -41,6 +41,7 @@ namespace JJFramework.Runtime
 			}
 		}
 
+#if !UNITY_EDITOR
 		private static bool _applicationQuit = false;
 
 		private void OnApplicationQuit()
@@ -52,5 +53,6 @@ namespace JJFramework.Runtime
 		{
 			_applicationQuit = true;
 		}
+#endif
 	}
 }
