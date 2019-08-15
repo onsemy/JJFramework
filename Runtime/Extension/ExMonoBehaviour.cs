@@ -51,5 +51,17 @@ namespace JJFramework.Runtime.Extension
         {
             this.LoadComponents();
         }
+
+        public abstract void ManagedUpdate();
+
+        private void OnEnable()
+        {
+            JJApplication.Instance.RegisterBehaviour(this);
+        }
+
+        private void OnDisable()
+        {
+            JJApplication.Instance.UnregisterBehaviour(this);
+        }
     }
 }
