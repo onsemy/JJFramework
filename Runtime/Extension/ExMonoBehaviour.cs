@@ -59,15 +59,5 @@ namespace JJFramework.Runtime.Extension
         public virtual void ManagedLateUpdate()
         {
         }
-
-        protected virtual void OnEnable()
-        {
-            JJApplication.Instance.RegisterBehaviour(this);
-        }
-
-        protected virtual void OnDisable()
-        {
-            JJApplication.Instance.UnregisterBehaviour(this);
-        }
     }
 }

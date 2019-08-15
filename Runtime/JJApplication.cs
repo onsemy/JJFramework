@@ -7,33 +7,50 @@ namespace JJFramework.Runtime
 {
 	public class JJApplication : MonoSingleton<JJApplication>
 	{
-		private readonly List<ExMonoBehaviour> _behaviourList = new List<ExMonoBehaviour>(0);
+		private readonly List<ExMonoBehaviour> _updateList = new List<ExMonoBehaviour>(0);
+		private readonly List<ExMonoBehaviour> _lateUpdateList = new List<ExMonoBehaviour>(0);
 
-		public void RegisterBehaviour(ExMonoBehaviour behaviour)
+		public void RegisterUpdate(ExMonoBehaviour behaviour)
 		{
-			_behaviourList.Add(behaviour);
+			_updateList.Add(behaviour);
 		}
 
-		public void UnregisterBehaviour(ExMonoBehaviour behaviour)
+		public void UnregisterUpdate(ExMonoBehaviour behaviour)
 		{
-			_behaviourList.Remove(behaviour);
+			_updateList.Remove(behaviour);
+		}
+
+		public void RegisterLateUpdate(ExMonoBehaviour behaviour)
+		{
+			_lateUpdateList.Add(behaviour);
+		}
+
+		public void UnregisterLateUpdate(ExMonoBehaviour behaviour)
+		{
+			_lateUpdateList.Remove(behaviour);
 		}
 
 		// Update is called once per frame
 		private void Update()
 		{
-			foreach (var behaviour in _behaviourList)
+			foreach (var item in _updateList)
 			{
-				behaviour.ManagedUpdate();
+				item.ManagedUpdate();
 			}
 		}
 
 		private void LateUpdate()
 		{
-			foreach (var behaviour in _behaviourList)
+			foreach (var item in _lateUpdateList)
 			{
-				behaviour.ManagedLateUpdate();
+				item.ManagedLateUpdate();
 			}
+		}
+
+		private void OnDestroy()
+		{
+			_updateList.Clear();
+			_lateUpdateList.Clear();
 		}
 	}
 }
