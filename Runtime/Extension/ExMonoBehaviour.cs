@@ -52,15 +52,20 @@ namespace JJFramework.Runtime.Extension
             this.LoadComponents();
         }
 
-        public abstract void ManagedUpdate();
-        public abstract void ManagedLateUpdate();
+        public virtual void ManagedUpdate()
+        {
+        }
 
-        private void OnEnable()
+        public virtual void ManagedLateUpdate()
+        {
+        }
+
+        protected virtual void OnEnable()
         {
             JJApplication.Instance.RegisterBehaviour(this);
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             JJApplication.Instance.UnregisterBehaviour(this);
         }
