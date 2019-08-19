@@ -218,7 +218,12 @@ namespace JJFramework.Runtime
             state = STATE.LOADED;
         }
 
-        public T LoadAssetBundle<T>(string assetBundleName) where T : Object
+        public T LoadAsset<T>(string assetBundleName) where T : Object
+        {
+            return LoadAsset<T>(assetBundleName, assetBundleName);
+        }
+
+        public T LoadAsset<T>(string assetBundleName, string assetName) where T : Object
         {
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
@@ -226,18 +231,52 @@ namespace JJFramework.Runtime
                 Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NOT EXIST!");
                 return null;
             }
-
-            var result = assetBundle.LoadAsset<T>(assetBundleName);
+            
+            var result = assetBundle.LoadAsset<T>(assetName);
             if (result != null)
             {
                 return result;
             }
 
-            Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NULL!");
+            Debug.LogError($"[LoadAssetBundle] Failed to load - {assetName} is NULL!");
             return null;
         }
 
+        public IEnumerator LoadAssetAsync<T>(string assetBundleName, System.Action<T> outAction) where T : Object
+        {
+            yield return LoadAssetAsync<T>(assetBundleName, assetBundleName, outAction);
+        }
+
+        public IEnumerator LoadAssetAsync<T>(string assetBundleName, string assetName, System.Action<T> outAction)
+            where T : Object
+        {
+            AssetBundle assetBundle;
+            if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
+            {
+                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NOT EXIST!");
+                yield break;
+            }
+
+            var request = assetBundle.LoadAssetAsync<T>(assetName);
+            yield return request;
+
+            if (request.asset != null)
+            {
+                outAction(request.asset as T);
+            }
+            else
+            {
+                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetName} is NULL!");
+            }
+        }
+
         public async Task<T> LoadAssetBundleAsync<T>(string assetBundleName) where T : Object
+        {
+            var result = await LoadAssetBundleAsync<T>(assetBundleName, assetBundleName);
+            return result;
+        }
+
+        public async Task<T> LoadAssetBundleAsync<T>(string assetBundleName, string assetName) where T : Object
         {
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
@@ -246,7 +285,7 @@ namespace JJFramework.Runtime
                 return null;
             }
 
-            var request = assetBundle.LoadAssetAsync<T>(assetBundleName);
+            var request = assetBundle.LoadAssetAsync<T>(assetName);
             await request;
 
             return request.asset as T;
