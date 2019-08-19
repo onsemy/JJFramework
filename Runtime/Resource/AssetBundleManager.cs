@@ -1,21 +1,38 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using JJFramework.Runtime.Extension;
 using UniRx;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using Object = UnityEngine.Object;
 
 namespace JJFramework.Runtime
 {
     public class AssetBundleManager : MonoSingleton<AssetBundleManager>
     {
+        public enum STATE
+        {
+            INITIALIZING,
+            PREPARING,
+            DOWNLOADING,
+            LOADING,
+            LOADED,
+            
+            ERROR
+        }
+        
         private AssetBundleManifest _assetBundleManifest;
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
+        
+        public STATE state { get; private set; }
 
         public int maximumAssetBundleCount { get; private set; }
+        public int downloadedAssetBundleCount { get; private set; }
         public int loadedAssetBundleCount { get; private set; }
         public float currentDownloadAssetBundleProgress { get; private set; }
 
@@ -49,6 +66,8 @@ namespace JJFramework.Runtime
 
         public IEnumerator PreloadAllAssetBundle(string url, string manifestName)
         {
+            state = STATE.INITIALIZING;
+            
             if (_assetBundleManifest == null)
             {
                 string manifestPath;
@@ -62,7 +81,6 @@ namespace JJFramework.Runtime
                 }
 
                 using (var request = UnityWebRequest.Get(manifestPath))
-//                using (var request = UnityWebRequestAssetBundle.GetAssetBundle(manifestPath, 0))
                 {
                     yield return request.SendWebRequest();
 
@@ -76,25 +94,34 @@ namespace JJFramework.Runtime
 
                     var bundle = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
 
-//                    var bundle = DownloadHandlerAssetBundle.GetContent(request);
                     _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
                 }
             }
 
+            state = STATE.PREPARING;
+
             var localAssetBundlePath = Path.Combine(Application.persistentDataPath, "bundles");
+            if (Directory.Exists(localAssetBundlePath) == false)
+            {
+                Directory.CreateDirectory(localAssetBundlePath);
+            }
             var localAssetBundleFileNameList = Directory.GetFiles(localAssetBundlePath).ToList();
             var assetList = _assetBundleManifest.GetAllAssetBundles();
             var listCount = assetList.Length;
             
-            // TODO(JJO): 쓰지 않는 AssetBundle 제거
-            for (int assetIndex = 0; assetIndex < listCount; ++assetIndex)
+            // NOTE(JJO): 쓰지 않는 AssetBundle 제거
+            if (localAssetBundleFileNameList.Count > 0)
             {
-                var localAssetBundleFileNameListCount = localAssetBundleFileNameList.Count;
-                for (int fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
+                for (int assetIndex = 0; assetIndex < listCount; ++assetIndex)
                 {
-                    if (localAssetBundleFileNameList[fileIndex].Contains(assetList[assetIndex]))
+                    var localAssetBundleFileNameListCount = localAssetBundleFileNameList.Count;
+                    for (int fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                     {
-                        localAssetBundleFileNameList.Remove(assetList[assetIndex]);
+                        var fileName = Path.GetFileName(localAssetBundleFileNameList[fileIndex]);
+                        if (fileName == assetList[assetIndex])
+                        {
+                            localAssetBundleFileNameList.RemoveAt(fileIndex);
+                        }
                     }
                 }
             }
@@ -104,47 +131,91 @@ namespace JJFramework.Runtime
                 var localAssetBundleFileNameListCount = localAssetBundleFileNameList.Count;
                 for (int fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                 {
+                    var path = Path.Combine(Application.persistentDataPath, localAssetBundleFileNameList[fileIndex]);
                     File.Delete(localAssetBundleFileNameList[fileIndex]);
                 }
             }
-            /////
-
+            
             maximumAssetBundleCount = listCount;
+            downloadedAssetBundleCount = 0;
             loadedAssetBundleCount = 0;
             currentDownloadAssetBundleProgress = 0f;
 
+            state = STATE.DOWNLOADING;
+            
+            // NOTE(JJO): 로컬에 AssetBundle Download
             for (var i = 0; i < listCount; ++i)
             {
-                string path;
+                string downloadPath;
                 if (url.EndsWith("/") == false)
                 {
-                    path = $"{url}/{assetList[i]}";
+                    downloadPath = $"{url}/{assetList[i]}";
                 }
                 else
                 {
-                    path = $"{url}{assetList[i]}";
+                    downloadPath = $"{url}{assetList[i]}";
                 }
 
-                using (var inRequest = UnityWebRequestAssetBundle.GetAssetBundle(path))
+                using (var request = UnityWebRequest.Get(downloadPath))
                 {
-                    inRequest.SendWebRequest();
-                    while (inRequest.isDone == false)
+                    request.SendWebRequest();
+                    while (request.isDone == false)
                     {
-                        currentDownloadAssetBundleProgress = inRequest.downloadProgress;
+                        currentDownloadAssetBundleProgress = request.downloadProgress;
                         yield return null;
                     }
 
-                    var assetBundle = DownloadHandlerAssetBundle.GetContent(inRequest);
-                    if (assetBundle == null)
+                    if (request.isNetworkError ||
+                        request.isHttpError ||
+                        string.IsNullOrEmpty(request.error) == false)
                     {
+                        Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
+                        yield break;
+                    }
+
+                    var path = Path.Combine(localAssetBundlePath, assetList[i]);
+                    try
+                    {
+                        File.WriteAllBytes(path, request.downloadHandler.data);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[PreloadAllAssetBundle] Failed to write - {assetList[i]}\n{e.Message}\n{e.StackTrace}");
                         continue;
                     }
 
-                    _assetBundleList.Add(assetList[i], assetBundle);
-
-                    ++loadedAssetBundleCount;
+                    ++downloadedAssetBundleCount;
+                    Debug.Log($"[PreloadAllAssetBundle] Succeeded to download - {path}");
                 }
             }
+
+            state = STATE.LOADING;
+            
+            for (var i = 0; i < listCount; ++i)
+            {
+                // TODO(JJO): Dependency Load
+                //
+                
+                var path = Path.Combine(localAssetBundlePath, assetList[i]);
+                using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, 0))
+                {
+                    yield return request.SendWebRequest();
+
+                    var bundle = DownloadHandlerAssetBundle.GetContent(request);
+                    if (bundle == null)
+                    {
+                        Debug.LogError($"[PreloadAllAssetBundle] Failed to load - {assetList[i]} is NULL\n{request.error}");
+                        continue;
+                    }
+                
+                    _assetBundleList.Add(assetList[i], bundle);
+                    
+                    ++loadedAssetBundleCount;
+                    Debug.Log($"[PreloadAllAssetBundle] Succeeded to load - {assetList[i]}");
+                }
+            }
+
+            state = STATE.LOADED;
         }
 
         public T LoadAssetBundle<T>(string assetBundleName) where T : Object
