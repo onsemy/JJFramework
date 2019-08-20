@@ -26,6 +26,7 @@ namespace JJFramework.Runtime
             ERROR
         }
         
+        private AssetBundle _assetBundleManifestObject;
         private AssetBundleManifest _assetBundleManifest;
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
         
@@ -34,7 +35,7 @@ namespace JJFramework.Runtime
         public int maximumAssetBundleCount { get; private set; }
         public int downloadedAssetBundleCount { get; private set; }
         public int loadedAssetBundleCount { get; private set; }
-        public float currentDownloadAssetBundleProgress { get; private set; }
+        public float currentAssetBundleProgress { get; private set; }
 
         public void UnloadAssetBundle(string assetBundleName, bool unloadAll = true)
         {
@@ -64,43 +65,40 @@ namespace JJFramework.Runtime
             }
         }
 
-        public IEnumerator PreloadAllAssetBundle(string url, string manifestName)
+        public IEnumerator PreloadAllAssetBundle(string url, string manifestName, string assetBundleDirectoryName)
         {
             state = STATE.INITIALIZING;
-            
-            if (_assetBundleManifest == null)
+
+            if (_assetBundleManifestObject != null ||
+                _assetBundleManifest != null)
             {
-                string manifestPath;
-                if (url.EndsWith("/") == false)
+                _assetBundleManifest = null;
+                _assetBundleManifestObject.Unload(true);
+                _assetBundleManifestObject = null;
+            }
+
+            var manifestPath = url.EndsWith("/") == false ? $"{url}/{manifestName}" : $"{url}{manifestName}";
+
+            using (var request = UnityWebRequest.Get(manifestPath))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.isNetworkError ||
+                    request.isHttpError ||
+                    string.IsNullOrEmpty(request.error) == false)
                 {
-                    manifestPath = $"{url}/{manifestName}";
-                }
-                else
-                {
-                    manifestPath = $"{url}{manifestName}";
+                    Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
                 }
 
-                using (var request = UnityWebRequest.Get(manifestPath))
-                {
-                    yield return request.SendWebRequest();
-
-                    if (request.isNetworkError ||
-                        request.isHttpError ||
-                        string.IsNullOrEmpty(request.error) == false)
-                    {
-                        Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
-                        yield break;
-                    }
-
-                    var bundle = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
-
-                    _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
-                }
+                _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
+                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
             }
 
             state = STATE.PREPARING;
 
-            var localAssetBundlePath = Path.Combine(Application.persistentDataPath, "bundles");
+            var localAssetBundlePath = Path.Combine(Application.persistentDataPath, assetBundleDirectoryName);
             if (Directory.Exists(localAssetBundlePath) == false)
             {
                 Directory.CreateDirectory(localAssetBundlePath);
@@ -112,10 +110,10 @@ namespace JJFramework.Runtime
             // NOTE(JJO): 쓰지 않는 AssetBundle 제거
             if (localAssetBundleFileNameList.Count > 0)
             {
-                for (int assetIndex = 0; assetIndex < listCount; ++assetIndex)
+                for (var assetIndex = 0; assetIndex < listCount; ++assetIndex)
                 {
                     var localAssetBundleFileNameListCount = localAssetBundleFileNameList.Count;
-                    for (int fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
+                    for (var fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                     {
                         var fileName = Path.GetFileName(localAssetBundleFileNameList[fileIndex]);
                         if (fileName == assetList[assetIndex])
@@ -129,9 +127,8 @@ namespace JJFramework.Runtime
             if (localAssetBundleFileNameList.Count > 0)
             {
                 var localAssetBundleFileNameListCount = localAssetBundleFileNameList.Count;
-                for (int fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
+                for (var fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                 {
-                    var path = Path.Combine(Application.persistentDataPath, localAssetBundleFileNameList[fileIndex]);
                     File.Delete(localAssetBundleFileNameList[fileIndex]);
                 }
             }
@@ -139,29 +136,21 @@ namespace JJFramework.Runtime
             maximumAssetBundleCount = listCount;
             downloadedAssetBundleCount = 0;
             loadedAssetBundleCount = 0;
-            currentDownloadAssetBundleProgress = 0f;
+            currentAssetBundleProgress = 0f;
 
             state = STATE.DOWNLOADING;
             
             // NOTE(JJO): 로컬에 AssetBundle Download
             for (var i = 0; i < listCount; ++i)
             {
-                string downloadPath;
-                if (url.EndsWith("/") == false)
-                {
-                    downloadPath = $"{url}/{assetList[i]}";
-                }
-                else
-                {
-                    downloadPath = $"{url}{assetList[i]}";
-                }
+                var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
 
                 using (var request = UnityWebRequest.Get(downloadPath))
                 {
                     request.SendWebRequest();
                     while (request.isDone == false)
                     {
-                        currentDownloadAssetBundleProgress = request.downloadProgress;
+                        currentAssetBundleProgress = request.downloadProgress;
                         yield return null;
                     }
 
@@ -170,6 +159,7 @@ namespace JJFramework.Runtime
                         string.IsNullOrEmpty(request.error) == false)
                     {
                         Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
+                        state = STATE.ERROR;
                         yield break;
                     }
 
@@ -181,6 +171,7 @@ namespace JJFramework.Runtime
                     catch (Exception e)
                     {
                         Debug.LogError($"[PreloadAllAssetBundle] Failed to write - {assetList[i]}\n{e.Message}\n{e.StackTrace}");
+                        state = STATE.ERROR;
                         continue;
                     }
 
@@ -193,29 +184,48 @@ namespace JJFramework.Runtime
             
             for (var i = 0; i < listCount; ++i)
             {
+                yield return LoadAssetBundle(localAssetBundlePath, assetList[i]);
+                
                 // TODO(JJO): Dependency Load
-                //
-                
-                var path = Path.Combine(localAssetBundlePath, assetList[i]);
-                using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, 0))
+                var dependencies = _assetBundleManifest.GetAllDependencies(assetList[i]);
+                var dependencyCount = dependencies.Length;
+                maximumAssetBundleCount += dependencyCount;
+                for (var depIndex = 0; depIndex < dependencyCount; ++depIndex)
                 {
-                    yield return request.SendWebRequest();
-
-                    var bundle = DownloadHandlerAssetBundle.GetContent(request);
-                    if (bundle == null)
-                    {
-                        Debug.LogError($"[PreloadAllAssetBundle] Failed to load - {assetList[i]} is NULL\n{request.error}");
-                        continue;
-                    }
-                
-                    _assetBundleList.Add(assetList[i], bundle);
-                    
-                    ++loadedAssetBundleCount;
-                    Debug.Log($"[PreloadAllAssetBundle] Succeeded to load - {assetList[i]}");
+                    yield return LoadAssetBundle(localAssetBundlePath, dependencies[depIndex]);
                 }
             }
 
             state = STATE.LOADED;
+        }
+
+        private IEnumerator LoadAssetBundle(string localAssetBundlePath, string assetBundle)
+        {
+            if (_assetBundleList.ContainsKey(assetBundle))
+            {
+                Debug.LogWarning($"[PreloadAllAssetBundle] Already loaded asset - {assetBundle}");
+                ++loadedAssetBundleCount;
+                yield break;
+            }
+            
+            var path = Path.Combine(localAssetBundlePath, assetBundle);
+            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, 0))
+            {
+                yield return request.SendWebRequest();
+
+                var bundle = DownloadHandlerAssetBundle.GetContent(request);
+                if (bundle == null)
+                {
+                    Debug.LogError($"[PreloadAllAssetBundle] Failed to load - {assetBundle} is NULL\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+                
+                _assetBundleList.Add(assetBundle, bundle);
+                    
+                ++loadedAssetBundleCount;
+                Debug.Log($"[PreloadAllAssetBundle] Succeeded to load - {assetBundle}");
+            }
         }
 
         public T LoadAsset<T>(string assetBundleName) where T : Object
