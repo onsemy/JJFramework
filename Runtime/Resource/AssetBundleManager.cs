@@ -211,7 +211,12 @@ namespace JJFramework.Runtime
             var path = Path.Combine(localAssetBundlePath, assetBundle);
             using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, 0))
             {
-                yield return request.SendWebRequest();
+                request.SendWebRequest();
+                while (request.isDone == false)
+                {
+                    currentAssetBundleProgress = request.downloadProgress;
+                    yield return null;
+                }
 
                 var bundle = DownloadHandlerAssetBundle.GetContent(request);
                 if (bundle == null)
