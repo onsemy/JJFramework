@@ -87,7 +87,8 @@ namespace JJFramework.Runtime
             var listCount = assetList.Length;
             
             state = STATE.DOWNLOADING;
-            
+
+            var skipCount = 0;
             // NOTE(JJO): 로컬에 AssetBundle Download
             for (var i = 0; i < listCount; ++i)
             {
@@ -116,11 +117,18 @@ namespace JJFramework.Runtime
                         {
                             Debug.Log($"[DownloadAllAssetBundle] Skipped to download - {assetList[i]} is latest version!");
                             ++downloadedAssetBundleCount;
+                            ++skipCount;
                             continue;
                         }
                     }
                     
                     File.WriteAllText(path, request.downloadHandler.text);
+                }
+
+                // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
+                if (skipCount != listCount)
+                {
+                    Caching.ClearCache();
                 }
                 
                 var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
