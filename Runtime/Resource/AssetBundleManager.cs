@@ -9,6 +9,7 @@ using UniRx;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace JJFramework.Runtime
@@ -39,6 +40,11 @@ namespace JJFramework.Runtime
         public int loadedAssetBundleCount { get; private set; }
         public float currentAssetBundleProgress { get; private set; }
 
+        private void OnDestroy()
+        {
+            UnloadAllAssetBundle(true);
+        }
+
         public void UnloadAssetBundle(string assetBundleName, bool unloadAll = true)
         {
             AssetBundle assetBundle;
@@ -63,7 +69,94 @@ namespace JJFramework.Runtime
             
             if (unloadManifest)
             {
-                AssetBundle.UnloadAllAssetBundles(true);
+                if (_assetBundleManifestObject)
+                {
+                    _assetBundleManifestObject.Unload(true);
+                    _assetBundleManifestObject = null;
+                }
+
+                if (_assetBundleManifest)
+                {
+                    _assetBundleManifest = null;
+                }
+            }
+        }
+
+        private IEnumerator DownloadAllAssetBundle(string url, string[] assetList, string localAssetBundlePath)
+        {
+            var listCount = assetList.Length;
+            
+            state = STATE.DOWNLOADING;
+            
+            // NOTE(JJO): 로컬에 AssetBundle Download
+            for (var i = 0; i < listCount; ++i)
+            {
+                // NOTE(JJO): 먼저 Bundle의 Manifest 요청/검증
+                var manifestPath = url.EndsWith("/") == false
+                    ? $"{url}/{assetList[i]}.manifest"
+                    : $"{url}{assetList[i]}.manifest";
+                using (var request = UnityWebRequest.Get(manifestPath))
+                {
+                    yield return request.SendWebRequest();
+                    
+                    if (request.isNetworkError ||
+                        request.isHttpError ||
+                        string.IsNullOrEmpty(request.error) == false)
+                    {
+                        Debug.LogError($"[DownloadAllAssetBundle] Network Error!\n{request.error}");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+
+                    var path = Path.Combine(localAssetBundlePath, $"{assetList[i]}.manifest");
+                    if (File.Exists(path))
+                    {
+                        var localManifest = File.ReadAllText(path);
+                        if (request.downloadHandler.text == localManifest)
+                        {
+                            Debug.Log($"[DownloadAllAssetBundle] Skipped to download - {assetList[i]} is latest version!");
+                            ++downloadedAssetBundleCount;
+                            continue;
+                        }
+                    }
+                    
+                    File.WriteAllText(path, request.downloadHandler.text);
+                }
+                
+                var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
+                using (var request = UnityWebRequest.Get(downloadPath))
+                {
+                    request.SendWebRequest();
+                    while (request.isDone == false)
+                    {
+                        currentAssetBundleProgress = request.downloadProgress;
+                        yield return null;
+                    }
+
+                    if (request.isNetworkError ||
+                        request.isHttpError ||
+                        string.IsNullOrEmpty(request.error) == false)
+                    {
+                        Debug.LogError($"[DownloadAllAssetBundle] Network Error!\n{request.error}");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+
+                    var path = Path.Combine(localAssetBundlePath, assetList[i]);
+                    try
+                    {
+                        File.WriteAllBytes(path, request.downloadHandler.data);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[DownloadAllAssetBundle] Failed to write - {assetList[i]}\n{e.Message}\n{e.StackTrace}");
+                        state = STATE.ERROR;
+                        continue;
+                    }
+
+                    ++downloadedAssetBundleCount;
+                    Debug.Log($"[DownloadAllAssetBundle] Succeeded to download - {path}");
+                }
             }
         }
 
@@ -118,7 +211,8 @@ namespace JJFramework.Runtime
                     for (var fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                     {
                         var fileName = Path.GetFileName(localAssetBundleFileNameList[fileIndex]);
-                        if (fileName == assetList[assetIndex])
+                        if (fileName == assetList[assetIndex] ||
+                            fileName == $"{assetList[assetIndex]}.manifest")
                         {
                             localAssetBundleFileNameList.RemoveAt(fileIndex);
                         }
@@ -143,44 +237,7 @@ namespace JJFramework.Runtime
             state = STATE.DOWNLOADING;
             
             // NOTE(JJO): 로컬에 AssetBundle Download
-            for (var i = 0; i < listCount; ++i)
-            {
-                var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
-
-                using (var request = UnityWebRequest.Get(downloadPath))
-                {
-                    request.SendWebRequest();
-                    while (request.isDone == false)
-                    {
-                        currentAssetBundleProgress = request.downloadProgress;
-                        yield return null;
-                    }
-
-                    if (request.isNetworkError ||
-                        request.isHttpError ||
-                        string.IsNullOrEmpty(request.error) == false)
-                    {
-                        Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
-                        state = STATE.ERROR;
-                        yield break;
-                    }
-
-                    var path = Path.Combine(localAssetBundlePath, assetList[i]);
-                    try
-                    {
-                        File.WriteAllBytes(path, request.downloadHandler.data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[PreloadAllAssetBundle] Failed to write - {assetList[i]}\n{e.Message}\n{e.StackTrace}");
-                        state = STATE.ERROR;
-                        continue;
-                    }
-
-                    ++downloadedAssetBundleCount;
-                    Debug.Log($"[PreloadAllAssetBundle] Succeeded to download - {path}");
-                }
-            }
+            yield return DownloadAllAssetBundle(url, assetList, localAssetBundlePath);
 
             state = STATE.LOADING;
             
@@ -205,7 +262,7 @@ namespace JJFramework.Runtime
         {
             if (_assetBundleList.ContainsKey(assetBundle))
             {
-                Debug.LogWarning($"[PreloadAllAssetBundle] Already loaded asset - {assetBundle}");
+                Debug.LogWarning($"[LoadAssetBundle] Already loaded asset - {assetBundle}");
                 ++loadedAssetBundleCount;
                 yield break;
             }
@@ -223,7 +280,7 @@ namespace JJFramework.Runtime
                 var bundle = DownloadHandlerAssetBundle.GetContent(request);
                 if (bundle == null)
                 {
-                    Debug.LogError($"[PreloadAllAssetBundle] Failed to load - {assetBundle} is NULL\n{request.error}");
+                    Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundle} is NULL\n{request.error}");
                     state = STATE.ERROR;
                     yield break;
                 }
@@ -231,8 +288,14 @@ namespace JJFramework.Runtime
                 _assetBundleList.Add(assetBundle, bundle);
                     
                 ++loadedAssetBundleCount;
-                Debug.Log($"[PreloadAllAssetBundle] Succeeded to load - {assetBundle}");
+                Debug.Log($"[LoadAssetBundle] Succeeded to load - {assetBundle}");
             }
+        }
+
+        public AssetBundle GetAssetBundle(string assetBundleName)
+        {
+            AssetBundle bundle;
+            return _assetBundleList.TryGetValue(assetBundleName, out bundle) == false ? null : bundle;
         }
 
         public T LoadAsset<T>(string assetBundleName) where T : Object
@@ -245,7 +308,7 @@ namespace JJFramework.Runtime
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
             {
-                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NOT EXIST!");
+                Debug.LogError($"[LoadAsset] Failed to load - {assetBundleName} is NOT EXIST!");
                 return null;
             }
             
@@ -255,7 +318,7 @@ namespace JJFramework.Runtime
                 return result;
             }
 
-            Debug.LogError($"[LoadAssetBundle] Failed to load - {assetName} is NULL!");
+            Debug.LogError($"[LoadAsset] Failed to load - {assetName} is NULL!");
             return null;
         }
 
@@ -267,10 +330,24 @@ namespace JJFramework.Runtime
         public IEnumerator LoadAssetAsync<T>(string assetBundleName, string assetName, System.Action<T> outAction)
             where T : Object
         {
+//#if UNITY_EDITOR
+//            if (SimulateAssetBundleInEditor)
+//            {
+//                var result = AssetDatabase.LoadAssetAtPath<T>(assetName);
+//                if (result == null)
+//                {
+//                    Log.Error($"[LoadAssetBundle] Failed to load - {assetName} is NULL!");
+//                }
+//                
+//                outAction(result);
+//                
+//                yield break;
+//            }
+//#endif
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
             {
-                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NOT EXIST!");
+                Debug.LogError($"[LoadAssetAsync] Failed to load - {assetBundleName} is NOT EXIST!");
                 yield break;
             }
 
@@ -283,8 +360,19 @@ namespace JJFramework.Runtime
             }
             else
             {
-                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetName} is NULL!");
+                Debug.LogError($"[LoadAssetAsync] Failed to load - {assetName} is NULL!");
             }
+        }
+
+        public IEnumerator LoadLevelAsync(string assetBundleName, string levelName, bool isAdditive)
+        {
+            if (_assetBundleList.ContainsKey(assetBundleName) == false)
+            {
+                Debug.LogError($"[LoadLevelAsync] {assetBundleName} is NULL!");
+                yield break;
+            }
+            
+            yield return SceneManager.LoadSceneAsync(levelName, isAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single);
         }
 
         public async Task<T> LoadAssetBundleAsync<T>(string assetBundleName) where T : Object
@@ -298,7 +386,7 @@ namespace JJFramework.Runtime
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
             {
-                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundleName} is NOT EXIST!");
+                Debug.LogError($"[LoadAssetBundleAsync] Failed to load - {assetBundleName} is NOT EXIST!");
                 return null;
             }
 
