@@ -29,6 +29,8 @@ namespace JJFramework.Runtime
         private AssetBundle _assetBundleManifestObject;
         private AssetBundleManifest _assetBundleManifest;
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
+
+        private static readonly string MANIFEST_NAME = "AssetBundleManifest";
         
         public STATE state { get; private set; }
 
@@ -93,7 +95,7 @@ namespace JJFramework.Runtime
                 }
 
                 _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
-                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
             }
 
             state = STATE.PREPARING;
