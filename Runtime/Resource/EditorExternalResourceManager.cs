@@ -3,19 +3,20 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Assertions;
 using JJFramework.Runtime.Extension;
+using UnityEngine;
 
 namespace JJFramework.Runtime.Resource
 {
     public class EditorExternalResourceManager : BaseExternalResourceManager
     {
-        public override T Load<T>(string name)
+        public override T Load<T>(string assetName)
         {
 #if UNITY_EDITOR
-            var assetList = Directory.GetFiles(UnityEngine.Application.dataPath + "/_resources", $"{name}.*", SearchOption.AllDirectories);
-            var fpath = Array.Find(assetList, x => Path.GetFileNameWithoutExtension(x) == name);
-            Assert.IsNotNull(fpath, $"Couldn't find : {name}");
+            var assetList = Directory.GetFiles(UnityEngine.Application.dataPath + "/_resources", $"{assetName}.*", SearchOption.AllDirectories);
+            var filePath = Array.Find(assetList, x => Path.GetFileNameWithoutExtension(x) == assetName);
+            Assert.IsNotNull(filePath, $"Couldn't find : {assetName}");
 
-            var assetPath = fpath.ToAssetPath();
+            var assetPath = filePath.ToAssetPath();
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(assetPath);
             return asset;
 #else
@@ -23,9 +24,15 @@ namespace JJFramework.Runtime.Resource
 #endif
         }
 
-        public override async Task<T> LoadAsync<T>(string name)
+        public override async Task<T> LoadAsync<T>(string assetName)
         {
-            return await Task.FromResult(this.Load<T>(name));
+            return await Task.FromResult(this.Load<T>(assetName));
+        }
+
+        public override void Initialize()
+        {
+            // NOTE(JJO): Editor모드라면 따로 초기화할 필요가 없다!
+            Debug.Log("[EditorExternalResourceManager] Initialized!");
         }
     }
 }

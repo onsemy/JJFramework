@@ -383,13 +383,13 @@ namespace JJFramework.Runtime
             yield return SceneManager.LoadSceneAsync(levelName, isAdditive ? LoadSceneMode.Additive : LoadSceneMode.Single);
         }
 
-        public async Task<T> LoadAssetBundleAsync<T>(string assetBundleName) where T : Object
+        public async Task<T> LoadAssetAsync<T>(string assetBundleName) where T : Object
         {
-            var result = await LoadAssetBundleAsync<T>(assetBundleName, assetBundleName);
+            var result = await LoadAssetAsync<T>(assetBundleName, assetBundleName);
             return result;
         }
 
-        public async Task<T> LoadAssetBundleAsync<T>(string assetBundleName, string assetName) where T : Object
+        public async Task<T> LoadAssetAsync<T>(string assetBundleName, string assetName) where T : Object
         {
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)

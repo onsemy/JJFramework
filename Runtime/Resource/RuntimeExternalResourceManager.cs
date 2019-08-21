@@ -6,38 +6,74 @@ namespace JJFramework.Runtime.Resource
 {
     public class RuntimeExternalResourceManager : BaseExternalResourceManager
     {
-        public override T Load<T>(string name)
+        private AssetBundleManager _assetBundleManager;
+
+        ~RuntimeExternalResourceManager()
         {
-            var bundle = base.LoadAssetBundle($"bundle/{name}");
-            return bundle?.LoadAsset<T>(name);
+            if (ReferenceEquals(_assetBundleManager, null) == false)
+            {
+                _assetBundleManager = null;
+            }
+        }
+        
+        public override T Load<T>(string assetName)
+        {
+            return Load<T>(assetName, assetName);
         }
 
-        public override async Task<T> LoadAsync<T>(string name)
+        public T Load<T>(string assetBundleName, string assetName) where T : UnityEngine.Object
         {
+            if (isInitialized == false)
+            {
+                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                return null;
+            }
+            
+            var result = _assetBundleManager.LoadAsset<T>(assetBundleName, assetName);
+            return result;
+        }
+
+        public override async Task<T> LoadAsync<T>(string assetName)
+        {
+            return await LoadAsync<T>(assetName, assetName);
+        }
+
+        public async Task<T> LoadAsync<T>(string assetBundleName, string assetName) where T : UnityEngine.Object
+        {
+            if (isInitialized == false)
+            {
+                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                return null;
+            }
+            
             var result = await Observable.Start(async () =>
             {
-                AssetBundle bundle = await base.LoadAssetBundleAsync($"bundle/{name}");
+                var asset = await _assetBundleManager.LoadAssetAsync<T>(assetBundleName, assetName);
 
-                if (bundle == null)
+                if (asset == null)
                 {
-                    Debug.LogError($"{name} is null");
+                    Debug.LogError($"{assetName} is null");
                     return null;
                 }
 
-                var request = bundle.LoadAssetAsync<T>(name);
-                await request;
-                return request.asset as T;
+                return asset;
             });
 
             return result.Result;
         }
 
-        public override async void PreloadAssetBundleAsync(string[] bundleList, System.Action<int, float, string> action)
+        public override void Initialize()
         {
-            for (int listLoop = 0; listLoop <= bundleList.Length; ++listLoop)
+            if (isInitialized ||
+                ReferenceEquals(_assetBundleManager, null) == false)
             {
-                await LoadAssetBundleAsync($"bundle/{bundleList[listLoop]}", progress => action?.Invoke(listLoop + 1, progress, bundleList[listLoop]));
+                Debug.LogWarning("[RuntimeExternalResourceManager|Initialize] Already Initialized AssetBundleManager!");
+                return;
             }
+
+            _assetBundleManager = AssetBundleManager.Instance;
+
+            isInitialized = true;
         }
     }
 }
