@@ -124,12 +124,6 @@ namespace JJFramework.Runtime
                     
                     File.WriteAllText(path, request.downloadHandler.text);
                 }
-
-                // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
-                if (skipCount != listCount)
-                {
-                    Caching.ClearCache();
-                }
                 
                 var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
                 using (var request = UnityWebRequest.Get(downloadPath))
@@ -165,6 +159,12 @@ namespace JJFramework.Runtime
                     ++downloadedAssetBundleCount;
                     Debug.Log($"[DownloadAllAssetBundle] Succeeded to download - {path}");
                 }
+            }
+
+            // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
+            if (skipCount != listCount)
+            {
+                Caching.ClearCache();
             }
         }
 
