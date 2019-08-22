@@ -40,6 +40,8 @@ namespace JJFramework.Runtime
         public int loadedAssetBundleCount { get; private set; }
         public float currentAssetBundleProgress { get; private set; }
 
+        private int _skippedAssetBundleCount;
+
         private void OnDestroy()
         {
             UnloadAllAssetBundle(true);
@@ -82,87 +84,103 @@ namespace JJFramework.Runtime
             }
         }
 
+        public IEnumerator DownloadAssetBundleManifest(string url, string manifestName)
+        {
+            var manifestPath = url.EndsWith("/") == false ? $"{url}/{manifestName}" : $"{url}{manifestName}";
+
+            using (var request = UnityWebRequest.Get(manifestPath))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.isNetworkError ||
+                    request.isHttpError ||
+                    string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
+                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
+            }
+        }
+
+        private IEnumerator DownloadAssetBundle(string url, string assetBundleName, string localAssetBundlePath)
+        {
+            // NOTE(JJO): 먼저 Bundle의 Manifest 요청/검증
+            var manifestPath = url.EndsWith("/") == false
+                ? $"{url}/{assetBundleName}.manifest"
+                : $"{url}{assetBundleName}.manifest";
+            using (var request = UnityWebRequest.Get(manifestPath))
+            {
+                yield return request.SendWebRequest();
+                
+                if (request.isNetworkError ||
+                    request.isHttpError ||
+                    string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                var path = Path.Combine(localAssetBundlePath, $"{assetBundleName}.manifest");
+                if (File.Exists(path))
+                {
+                    var localManifest = File.ReadAllText(path);
+                    if (request.downloadHandler.text == localManifest)
+                    {
+                        Debug.Log($"[DownloadAssetBundle] Skipped to download - {assetBundleName} is latest version!");
+                        ++downloadedAssetBundleCount;
+                        ++_skippedAssetBundleCount;
+                        yield break;
+                    }
+                }
+                
+                File.WriteAllText(path, request.downloadHandler.text);
+            }
+            
+            var savePath = Path.Combine(localAssetBundlePath, assetBundleName);
+            var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetBundleName}" : $"{url}{assetBundleName}";
+            using (var request = new UnityWebRequest(downloadPath, UnityWebRequest.kHttpVerbGET, new DownloadHandlerFile(savePath), null))
+            {
+                request.SendWebRequest();
+                while (request.isDone == false)
+                {
+                    currentAssetBundleProgress = request.downloadProgress;
+                    yield return null;
+                }
+
+                if (request.isNetworkError ||
+                    request.isHttpError ||
+                    string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                ++downloadedAssetBundleCount;
+                Debug.Log($"[DownloadAllAssetBundle] Succeeded to download - {savePath}");
+            }
+        }
+
         private IEnumerator DownloadAllAssetBundle(string url, string[] assetList, string localAssetBundlePath)
         {
+            _skippedAssetBundleCount = 0;
             var listCount = assetList.Length;
             
             state = STATE.DOWNLOADING;
 
-            var skipCount = 0;
             // NOTE(JJO): 로컬에 AssetBundle Download
             for (var i = 0; i < listCount; ++i)
             {
-                // NOTE(JJO): 먼저 Bundle의 Manifest 요청/검증
-                var manifestPath = url.EndsWith("/") == false
-                    ? $"{url}/{assetList[i]}.manifest"
-                    : $"{url}{assetList[i]}.manifest";
-                using (var request = UnityWebRequest.Get(manifestPath))
-                {
-                    yield return request.SendWebRequest();
-                    
-                    if (request.isNetworkError ||
-                        request.isHttpError ||
-                        string.IsNullOrEmpty(request.error) == false)
-                    {
-                        Debug.LogError($"[DownloadAllAssetBundle] Network Error!\n{request.error}");
-                        state = STATE.ERROR;
-                        yield break;
-                    }
-
-                    var path = Path.Combine(localAssetBundlePath, $"{assetList[i]}.manifest");
-                    if (File.Exists(path))
-                    {
-                        var localManifest = File.ReadAllText(path);
-                        if (request.downloadHandler.text == localManifest)
-                        {
-                            Debug.Log($"[DownloadAllAssetBundle] Skipped to download - {assetList[i]} is latest version!");
-                            ++downloadedAssetBundleCount;
-                            ++skipCount;
-                            continue;
-                        }
-                    }
-                    
-                    File.WriteAllText(path, request.downloadHandler.text);
-                }
-                
-                var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
-                using (var request = UnityWebRequest.Get(downloadPath))
-                {
-                    request.SendWebRequest();
-                    while (request.isDone == false)
-                    {
-                        currentAssetBundleProgress = request.downloadProgress;
-                        yield return null;
-                    }
-
-                    if (request.isNetworkError ||
-                        request.isHttpError ||
-                        string.IsNullOrEmpty(request.error) == false)
-                    {
-                        Debug.LogError($"[DownloadAllAssetBundle] Network Error!\n{request.error}");
-                        state = STATE.ERROR;
-                        yield break;
-                    }
-
-                    var path = Path.Combine(localAssetBundlePath, assetList[i]);
-                    try
-                    {
-                        File.WriteAllBytes(path, request.downloadHandler.data);
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogError($"[DownloadAllAssetBundle] Failed to write - {assetList[i]}\n{e.Message}\n{e.StackTrace}");
-                        state = STATE.ERROR;
-                        continue;
-                    }
-
-                    ++downloadedAssetBundleCount;
-                    Debug.Log($"[DownloadAllAssetBundle] Succeeded to download - {path}");
-                }
+                yield return DownloadAssetBundle(url, assetList[i], localAssetBundlePath);
             }
 
             // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
-            if (skipCount != listCount)
+            if (_skippedAssetBundleCount != listCount)
             {
                 Caching.ClearCache();
             }
