@@ -166,7 +166,7 @@ namespace JJFramework.Runtime
             }
         }
 
-        private IEnumerator DownloadAllAssetBundle(string url, string[] assetList, string localAssetBundlePath)
+        public IEnumerator DownloadAllAssetBundle(string url, string[] assetList, string localAssetBundlePath)
         {
             _skippedAssetBundleCount = 0;
             var listCount = assetList.Length;
