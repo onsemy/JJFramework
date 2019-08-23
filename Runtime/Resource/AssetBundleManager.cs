@@ -32,6 +32,7 @@ namespace JJFramework.Runtime
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
 
         private static readonly string MANIFEST_NAME = "AssetBundleManifest";
+        private static readonly string CONTENT_LENGTH = "Content-Length";
         
         public STATE state { get; private set; }
 
@@ -39,6 +40,7 @@ namespace JJFramework.Runtime
         public int downloadedAssetBundleCount { get; private set; }
         public int loadedAssetBundleCount { get; private set; }
         public float currentAssetBundleProgress { get; private set; }
+        public ulong assetBundleTotalSize { get; private set; }
 
         private int _skippedAssetBundleCount;
 
@@ -103,6 +105,38 @@ namespace JJFramework.Runtime
 
                 _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
                 _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
+            }
+        }
+
+        public IEnumerator GetAllAssetBundleSize(string url)
+        {
+            if (_assetBundleManifest == null)
+            {
+                Debug.LogError($"[GetAllAssetBundleSize] AssetBundleManifest is NULL!");
+                yield break;
+            }
+
+            assetBundleTotalSize = 0;
+            var assetList = _assetBundleManifest.GetAllAssetBundles();
+            var listCount = assetList.Length;
+            for (int i = 0; i < listCount; ++i)
+            {
+                var downloadPath = url.EndsWith("/") == false ? $"{url}/{assetList[i]}" : $"{url}{assetList[i]}";
+                using (var request = UnityWebRequest.Head(downloadPath))
+                {
+                    yield return request.SendWebRequest();
+
+                    if (request.isNetworkError ||
+                        request.isHttpError)
+                    {
+                        Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
+                        yield break;
+                    }
+
+                    ulong assetBundleSize;
+                    ulong.TryParse(request.GetResponseHeader(CONTENT_LENGTH), out assetBundleSize);
+                    assetBundleTotalSize += assetBundleSize;
+                }
             }
         }
 
