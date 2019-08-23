@@ -224,31 +224,10 @@ namespace JJFramework.Runtime
         {
             state = STATE.INITIALIZING;
 
-            if (_assetBundleManifestObject != null ||
-                _assetBundleManifest != null)
+            if (_assetBundleManifest == null)
             {
-                _assetBundleManifest = null;
-                _assetBundleManifestObject.Unload(true);
-                _assetBundleManifestObject = null;
-            }
-
-            var manifestPath = url.EndsWith("/") == false ? $"{url}/{manifestName}" : $"{url}{manifestName}";
-
-            using (var request = UnityWebRequest.Get(manifestPath))
-            {
-                yield return request.SendWebRequest();
-
-                if (request.isNetworkError ||
-                    request.isHttpError ||
-                    string.IsNullOrEmpty(request.error) == false)
-                {
-                    Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
-                    state = STATE.ERROR;
-                    yield break;
-                }
-
-                _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
-                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
+                Debug.LogError($"[PreloadAllAssetBundle] AssetBundleManifest is NULL!");
+                yield break;
             }
 
             state = STATE.PREPARING;
