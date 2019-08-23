@@ -98,7 +98,7 @@ namespace JJFramework.Runtime
                     request.isHttpError ||
                     string.IsNullOrEmpty(request.error) == false)
                 {
-                    Debug.LogError($"[PreloadAllAssetBundle] Network Error!\n{request.error}");
+                    Debug.LogError($"[DownloadAssetBundleManifest] Network Error!\n{request.error}");
                     state = STATE.ERROR;
                     yield break;
                 }
@@ -129,7 +129,7 @@ namespace JJFramework.Runtime
                     if (request.isNetworkError ||
                         request.isHttpError)
                     {
-                        Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
+                        Debug.LogError($"[GetAllAssetBundleSize] Network Error!\n{request.error}");
                         yield break;
                     }
 
@@ -196,7 +196,7 @@ namespace JJFramework.Runtime
                 }
 
                 ++downloadedAssetBundleCount;
-                Debug.Log($"[DownloadAllAssetBundle] Succeeded to download - {savePath}");
+                Debug.Log($"[DownloadAssetBundle] Succeeded to download - {savePath}");
             }
         }
 
