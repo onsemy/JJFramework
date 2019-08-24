@@ -10,6 +10,8 @@ namespace JJFramework.Runtime.UI
     [DisallowMultipleComponent]
     public class UIManager
     {
+        private static readonly string UI = "ui";
+        
         private IResourceLoader __resourceLoader;
 
         public class UIPack
@@ -60,7 +62,7 @@ namespace JJFramework.Runtime.UI
 
         public T Generate<T>() where T : BaseUI
         {
-            var origin = __resourceLoader.Load<GameObject>(typeof(T).Name);
+            var origin = __resourceLoader.Load<GameObject>(UI, typeof(T).Name);
             if (origin == null)
             {
                 Debug.LogError($"{nameof(T)}을(를) 불러오지 못했습니다! - origin이 NULL입니다!");

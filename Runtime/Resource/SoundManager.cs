@@ -6,6 +6,7 @@ namespace JJFramework.Runtime.Resource
     [DisallowMultipleComponent]
     public class SoundManager
     {
+        private static readonly string SOUND = "sound";
         private IResourceLoader _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
@@ -51,7 +52,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(clip);
+                var audio = _resourceLoader.Load<AudioClip>(SOUND, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
