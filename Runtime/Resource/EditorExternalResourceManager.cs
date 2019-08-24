@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Assertions;
 using JJFramework.Runtime.Extension;
+using UnityEditor;
 using UnityEngine;
 
 namespace JJFramework.Runtime.Resource
@@ -24,9 +25,31 @@ namespace JJFramework.Runtime.Resource
 #endif
         }
 
+        public override T Load<T>(string assetBundleName, string assetName)
+        {
+#if UNITY_EDITOR
+            var assetList = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleName, assetName);
+            var listCount = assetList.Length;
+            if (listCount == 0)
+            {
+                return null;
+            }
+
+            var asset = AssetDatabase.LoadAssetAtPath<T>(assetList[0]);
+            return asset;
+#else
+            return null;
+#endif
+        }
+
         public override async Task<T> LoadAsync<T>(string assetName)
         {
             return await Task.FromResult(this.Load<T>(assetName));
+        }
+
+        public override async Task<T> LoadAsync<T>(string assetBundleName, string assetName)
+        {
+            return await Task.FromResult(this.Load<T>(assetBundleName, assetName));
         }
     }
 }

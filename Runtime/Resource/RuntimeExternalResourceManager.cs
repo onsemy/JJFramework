@@ -19,7 +19,7 @@ namespace JJFramework.Runtime.Resource
             return Load<T>(assetName, assetName);
         }
 
-        public T Load<T>(string assetBundleName, string assetName) where T : UnityEngine.Object
+        public override T Load<T>(string assetBundleName, string assetName)
         {
             if (isInitialized == false)
             {
@@ -36,7 +36,7 @@ namespace JJFramework.Runtime.Resource
             return await LoadAsync<T>(assetName, assetName);
         }
 
-        public async Task<T> LoadAsync<T>(string assetBundleName, string assetName) where T : UnityEngine.Object
+        public override async Task<T> LoadAsync<T>(string assetBundleName, string assetName)
         {
             if (isInitialized == false)
             {

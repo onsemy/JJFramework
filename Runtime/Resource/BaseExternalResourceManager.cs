@@ -11,7 +11,9 @@ namespace JJFramework.Runtime.Resource
         #region IResourceLoader
 
         public abstract T Load<T>(string assetName) where T : UnityEngine.Object;
+        public abstract T Load<T>(string assetBundleName, string assetName) where T : UnityEngine.Object;
         public abstract Task<T> LoadAsync<T>(string assetName) where T : UnityEngine.Object;
+        public abstract Task<T> LoadAsync<T>(string assetBundleName, string assetName) where T : UnityEngine.Object;
 
         #endregion IResourceLoader
 
