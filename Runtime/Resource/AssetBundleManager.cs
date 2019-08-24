@@ -205,12 +205,16 @@ namespace JJFramework.Runtime
             }
         }
 
-        public void PrepareDownload(string url, string assetBundleDirectoryName)
+        public IEnumerator PrepareDownload(string url, string manifestName, string assetBundleDirectoryName)
         {
             state = STATE.PREPARING;
 
             downloadUrl = url;
             localAssetBundlePath = Path.Combine(Application.persistentDataPath, assetBundleDirectoryName);
+            
+            // NOTE(JJO): 먼저 AssetBundleManifest를 받아서 정보를 가져옴.
+            yield return DownloadAssetBundleManifest(manifestName);
+
             if (Directory.Exists(localAssetBundlePath) == false)
             {
                 Directory.CreateDirectory(localAssetBundlePath);
