@@ -15,7 +15,12 @@ namespace JJFramework.Runtime.Resource
 
         #endregion IResourceLoader
 
-        protected bool isInitialized = false;
-        public abstract void Initialize();
+        protected AssetBundleManager _assetBundleManager;
+        public void SetAssetBundleManager(AssetBundleManager manager)
+        {
+            _assetBundleManager = manager;
+        }
+
+        protected bool isInitialized => ReferenceEquals(_assetBundleManager, null) == false;
     }
 }

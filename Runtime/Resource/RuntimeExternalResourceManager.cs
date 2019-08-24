@@ -6,8 +6,6 @@ namespace JJFramework.Runtime.Resource
 {
     public class RuntimeExternalResourceManager : BaseExternalResourceManager
     {
-        private AssetBundleManager _assetBundleManager;
-
         ~RuntimeExternalResourceManager()
         {
             if (ReferenceEquals(_assetBundleManager, null) == false)
@@ -60,20 +58,6 @@ namespace JJFramework.Runtime.Resource
             });
 
             return result.Result;
-        }
-
-        public override void Initialize()
-        {
-            if (isInitialized ||
-                ReferenceEquals(_assetBundleManager, null) == false)
-            {
-                Debug.LogWarning("[RuntimeExternalResourceManager|Initialize] Already Initialized AssetBundleManager!");
-                return;
-            }
-
-            _assetBundleManager = AssetBundleManager.Instance;
-
-            isInitialized = true;
         }
     }
 }

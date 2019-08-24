@@ -28,11 +28,5 @@ namespace JJFramework.Runtime.Resource
         {
             return await Task.FromResult(this.Load<T>(assetName));
         }
-
-        public override void Initialize()
-        {
-            // NOTE(JJO): Editor모드라면 따로 초기화할 필요가 없다!
-            Debug.Log("[EditorExternalResourceManager] Initialized!");
-        }
     }
 }
