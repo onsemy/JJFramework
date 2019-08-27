@@ -47,11 +47,6 @@ namespace JJFramework.Runtime
 
         private int _skippedAssetBundleCount;
 
-        ~AssetBundleManager()
-        {
-            UnloadAllAssetBundle(true);
-        }
-
         public void UnloadAssetBundle(string assetBundleName, bool unloadAll = true)
         {
             AssetBundle assetBundle;
