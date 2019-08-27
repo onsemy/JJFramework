@@ -89,6 +89,15 @@ namespace JJFramework.Runtime
             }
         }
 
+        public void Cleanup()
+        {
+            UnloadAllAssetBundle(true);
+            
+            _assetBundleList.Clear();
+            _assetBundleManifest = null;
+            _assetBundleManifestObject = null;
+        }
+
         public IEnumerator DownloadAssetBundleManifest(string manifestName)
         {
             var manifestPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}" : $"{downloadUrl}{manifestName}";
