@@ -12,7 +12,7 @@ namespace JJFramework.Runtime.UI
     {
         private static readonly string UI = "ui";
         
-        private IResourceLoader __resourceLoader;
+        private IResourceLoader _resourceLoader;
 
         public class UIPack
         {
@@ -24,28 +24,31 @@ namespace JJFramework.Runtime.UI
                 this.id = id;
                 this.ui = ui;
             }
+
+            public void Cleanup()
+            {
+                ui = null;
+            }
         }
 
-        private List<UIPack> __uiStackList = new List<UIPack>();
+        private List<UIPack> _uiStackList = new List<UIPack>();
 
-        //private Stack<BaseUI> __uiStackList = new Stack<BaseUI>();
-
-        private Transform __uiRoot;
-        private Canvas __canvas;
+        private Transform _uiRoot;
+        private Canvas _canvas;
 
         public void Init(IResourceLoader loader, Vector2 screenSize, int sortingOrder = 100)
         {
-            __resourceLoader = loader;
+            _resourceLoader = loader;
 
             GameObject obj = new GameObject(nameof(UIManager));
 
-            __canvas = obj.AddComponent<Canvas>();
-            __canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            __canvas.worldCamera = Camera.main;
-            __canvas.sortingOrder = sortingOrder;
+            _canvas = obj.AddComponent<Canvas>();
+            _canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            _canvas.worldCamera = Camera.main;
+            _canvas.sortingOrder = sortingOrder;
             // NOTE(JJO): Spine - SkeletonGraphic 덕분에 기본값이 100인 것을 1로 변경함.
             // 추후 SkeletonGraphic 버그(?)가 고쳐지면 변경될 수 있음.
-            __canvas.referencePixelsPerUnit = 1f;
+            _canvas.referencePixelsPerUnit = 1f;
 
             var scaler = obj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -56,20 +59,35 @@ namespace JJFramework.Runtime.UI
             raycaster.blockingObjects = GraphicRaycaster.BlockingObjects.None;
             raycaster.ignoreReversedGraphics = true;
 
-            __uiRoot = obj.transform;
+            _uiRoot = obj.transform;
             GameObject.DontDestroyOnLoad(obj);
+        }
+
+        public void Cleanup()
+        {
+            foreach (var uiPack in _uiStackList)
+            {
+                uiPack.Cleanup();
+            }
+            _uiStackList.Clear();
+            _uiStackList = null;
+
+            _uiRoot = null;
+            _canvas = null;
+
+            _resourceLoader = null;
         }
 
         public T Generate<T>() where T : BaseUI
         {
-            var origin = __resourceLoader.Load<GameObject>(UI, typeof(T).Name);
+            var origin = _resourceLoader.Load<GameObject>(UI, typeof(T).Name);
             if (origin == null)
             {
                 Debug.LogError($"{nameof(T)}을(를) 불러오지 못했습니다! - origin이 NULL입니다!");
                 return null;
             }
 
-            var uiObject = GameObject.Instantiate<GameObject>(origin, __uiRoot);
+            var uiObject = GameObject.Instantiate<GameObject>(origin, _uiRoot);
             if (uiObject == null)
             {
                 Debug.LogError($"{nameof(T)}을(를) 불러오지 못했습니다! - Prefab 생성에 실패했습니다.");
@@ -80,45 +98,45 @@ namespace JJFramework.Runtime.UI
             ui.RegistPreCloseAction(RemoveFromStack);
 
             //__uiStackList.Push(ui);
-            __uiStackList.Add(new UIPack(ui.id, ui));
+            _uiStackList.Add(new UIPack(ui.id, ui));
 
-            if (__canvas.worldCamera == null)
+            if (_canvas.worldCamera == null)
             {
-                __canvas.worldCamera = Camera.main;
+                _canvas.worldCamera = Camera.main;
             }
 
             return ui;
         }
 
-        public BaseUI currentDialog => __uiStackList.Count > 0 ? __uiStackList.LastOrDefault()?.ui : null;
+        public BaseUI currentDialog => _uiStackList.Count > 0 ? _uiStackList.LastOrDefault()?.ui : null;
 
         private void RemoveFromStack(BaseUI ui)
         {
-            if (__uiStackList.Count == 0)
+            if (_uiStackList.Count == 0)
             {
                 Debug.LogError("Stack is EMPTY!");
                 return;
             }
 
-            var findUIPack = __uiStackList.Find(x => ReferenceEquals(x.ui, ui));
+            var findUIPack = _uiStackList.Find(x => ReferenceEquals(x.ui, ui));
             if (ReferenceEquals(findUIPack, null) == true)
             {
                 Debug.LogError("ui is NOT IN Stack!");
                 return;
             }
 
-            __uiStackList.Remove(findUIPack);
+            _uiStackList.Remove(findUIPack);
         }
 
         public void CloseWithID(int id)
         {
-            if (__uiStackList.Count == 0)
+            if (_uiStackList.Count == 0)
             {
                 Debug.LogError("Stack is EMPTY!");
                 return;
             }
 
-            var uiPack = __uiStackList.Find(x => x.id == id);
+            var uiPack = _uiStackList.Find(x => x.id == id);
             if (ReferenceEquals(uiPack, null))
             {
                 Debug.LogError("Cannot find UIPack!");
@@ -134,14 +152,14 @@ namespace JJFramework.Runtime.UI
         /// <param name="index">기본값은 -1. 이외의 값이 들어간다면 Stack에서 해당 Index의 UIPack을 찾아서 닫는다.</param>
         public void Close(int index = -1)
         {
-            if (__uiStackList.Count == 0)
+            if (_uiStackList.Count == 0)
             {
                 Debug.LogError("Stack is EMPTY!");
                 return;
             }
 
             BaseUI ui = null;
-            if (index < -1 || __uiStackList.Count <= index)
+            if (index < -1 || _uiStackList.Count <= index)
             {
                 Debug.LogError($"INVALID index!: {index}");
                 return;
@@ -149,11 +167,11 @@ namespace JJFramework.Runtime.UI
 
             if (index == -1)
             {
-                ui = __uiStackList.PopLast()?.ui;
+                ui = _uiStackList.PopLast()?.ui;
             }
             else
             {
-                ui = __uiStackList.Pop(index)?.ui;
+                ui = _uiStackList.Pop(index)?.ui;
             }
 
             ui?.CloseAction();
@@ -161,13 +179,13 @@ namespace JJFramework.Runtime.UI
 
         public void CloseAll()
         {
-            while (__uiStackList.Count > 0)
+            while (_uiStackList.Count > 0)
             {
                 Close();
             }
 
             // NOTE(JJO): Stack에서 다 지웠음에도 남아있을 수도 있어서 추가로 남겨둠
-            foreach (Transform child in __uiRoot)
+            foreach (Transform child in _uiRoot)
             {
                 GameObject.Destroy(child.gameObject);
             }
@@ -177,10 +195,10 @@ namespace JJFramework.Runtime.UI
         {
             CloseAll();
 
-            __uiStackList.Clear();
-            __uiStackList = null;
+            _uiStackList.Clear();
+            _uiStackList = null;
 
-            __uiRoot = null;
+            _uiRoot = null;
         }
     }
 }

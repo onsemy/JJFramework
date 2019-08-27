@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace JJFramework.Runtime.Resource
 {
-    [DisallowMultipleComponent]
     public class SoundManager
     {
         private static readonly string SOUND = "sound";
@@ -35,6 +34,19 @@ namespace JJFramework.Runtime.Resource
             _musicSource.playOnAwake = false;
 
             GameObject.DontDestroyOnLoad(obj);
+        }
+
+        public void Cleanup()
+        {
+            _effectSource.Clear();
+            _effectSource = null;
+
+            _musicSource = null;
+            
+            _clipsDic.Clear();
+            _clipsDic = null;
+
+            _resourceLoader = null;
         }
 
         public void PreloadEffects(params string[] clipList)

@@ -6,14 +6,6 @@ namespace JJFramework.Runtime.Resource
 {
     public class RuntimeExternalResourceManager : BaseExternalResourceManager
     {
-        ~RuntimeExternalResourceManager()
-        {
-            if (ReferenceEquals(_assetBundleManager, null) == false)
-            {
-                _assetBundleManager = null;
-            }
-        }
-        
         public override T Load<T>(string assetName)
         {
             return Load<T>(assetName, assetName);
@@ -27,7 +19,7 @@ namespace JJFramework.Runtime.Resource
                 return null;
             }
             
-            var result = _assetBundleManager.LoadAsset<T>(assetBundleName, assetName);
+            var result = assetBundleManager.LoadAsset<T>(assetBundleName, assetName);
             return result;
         }
 
@@ -46,7 +38,7 @@ namespace JJFramework.Runtime.Resource
             
             var result = await Observable.Start(async () =>
             {
-                var asset = await _assetBundleManager.LoadAssetAsync<T>(assetBundleName, assetName);
+                var asset = await assetBundleManager.LoadAssetAsync<T>(assetBundleName, assetName);
 
                 if (asset == null)
                 {

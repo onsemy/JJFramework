@@ -17,12 +17,17 @@ namespace JJFramework.Runtime.Resource
 
         #endregion IResourceLoader
 
-        protected AssetBundleManager _assetBundleManager;
+        protected AssetBundleManager assetBundleManager;
         public void SetAssetBundleManager(AssetBundleManager manager)
         {
-            _assetBundleManager = manager;
+            assetBundleManager = manager;
         }
 
-        protected bool isInitialized => ReferenceEquals(_assetBundleManager, null) == false;
+        public void Cleanup()
+        {
+            assetBundleManager = null;
+        }
+
+        protected bool isInitialized => ReferenceEquals(assetBundleManager, null) == false;
     }
 }
