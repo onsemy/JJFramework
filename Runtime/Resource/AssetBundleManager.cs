@@ -139,6 +139,7 @@ namespace JJFramework.Runtime
                         request.isHttpError)
                     {
                         Debug.LogError($"[GetAllAssetBundleSize] Network Error!\n{request.error}");
+                        state = STATE.ERROR;
                         yield break;
                     }
 
@@ -270,6 +271,10 @@ namespace JJFramework.Runtime
             for (var i = 0; i < listCount; ++i)
             {
                 yield return DownloadAssetBundle(assetList[i]);
+                if (state == STATE.ERROR)
+                {
+                    yield break;
+                }
             }
 
             // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
@@ -304,6 +309,10 @@ namespace JJFramework.Runtime
                 for (var depIndex = 0; depIndex < dependencyCount; ++depIndex)
                 {
                     yield return LoadAssetBundle(dependencies[depIndex]);
+                    if (state == STATE.ERROR)
+                    {
+                        yield break;
+                    }
                 }
             }
 
