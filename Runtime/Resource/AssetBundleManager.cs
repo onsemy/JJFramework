@@ -30,6 +30,7 @@ namespace JJFramework.Runtime
         private AssetBundle _assetBundleManifestObject;
         private AssetBundleManifest _assetBundleManifest;
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
+        private readonly List<string> _downloadingAssetBundleList = new List<string>(0);
 
         private static readonly string MANIFEST_NAME = "AssetBundleManifest";
         private static readonly string CONTENT_LENGTH = "Content-Length";
@@ -91,63 +92,6 @@ namespace JJFramework.Runtime
             _assetBundleList.Clear();
             _assetBundleManifest = null;
             _assetBundleManifestObject = null;
-        }
-
-        public IEnumerator DownloadAssetBundleManifest(string manifestName)
-        {
-            var manifestPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}" : $"{downloadUrl}{manifestName}";
-
-            using (var request = UnityWebRequest.Get(manifestPath))
-            {
-                yield return request.SendWebRequest();
-
-                if (request.isNetworkError ||
-                    request.isHttpError ||
-                    string.IsNullOrEmpty(request.error) == false)
-                {
-                    Debug.LogError($"[DownloadAssetBundleManifest] Network Error!\n{request.error}");
-                    state = STATE.ERROR;
-                    yield break;
-                }
-
-                _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
-                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
-
-                maximumAssetBundleCount = _assetBundleManifest.GetAllAssetBundles().Length;
-            }
-        }
-
-        public IEnumerator GetAllAssetBundleSize()
-        {
-            if (_assetBundleManifest == null)
-            {
-                Debug.LogError($"[GetAllAssetBundleSize] AssetBundleManifest is NULL!");
-                yield break;
-            }
-
-            assetBundleTotalSize = 0;
-            var assetList = _assetBundleManifest.GetAllAssetBundles();
-            var listCount = assetList.Length;
-            for (int i = 0; i < listCount; ++i)
-            {
-                var downloadPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{assetList[i]}" : $"{downloadUrl}{assetList[i]}";
-                using (var request = UnityWebRequest.Head(downloadPath))
-                {
-                    yield return request.SendWebRequest();
-
-                    if (request.isNetworkError ||
-                        request.isHttpError)
-                    {
-                        Debug.LogError($"[GetAllAssetBundleSize] Network Error!\n{request.error}");
-                        state = STATE.ERROR;
-                        yield break;
-                    }
-
-                    ulong assetBundleSize;
-                    ulong.TryParse(request.GetResponseHeader(CONTENT_LENGTH), out assetBundleSize);
-                    assetBundleTotalSize += assetBundleSize;
-                }
-            }
         }
 
         private IEnumerator DownloadAssetBundle(string assetBundleName)
@@ -216,14 +160,95 @@ namespace JJFramework.Runtime
 
             downloadUrl = url;
             localAssetBundlePath = Path.Combine(Application.persistentDataPath, assetBundleDirectoryName);
-            
-            // NOTE(JJO): 먼저 AssetBundleManifest를 받아서 정보를 가져옴.
-            yield return DownloadAssetBundleManifest(manifestName);
-
             if (Directory.Exists(localAssetBundlePath) == false)
             {
                 Directory.CreateDirectory(localAssetBundlePath);
             }
+            
+            var localManifestRawPath = Path.Combine(localAssetBundlePath, $"{manifestName}.manifest");
+            var localManifestPath = Path.Combine(localAssetBundlePath, manifestName);
+            string localManifestRaw = string.Empty;
+            string remoteManifestRaw = string.Empty;
+            
+            // NOTE(JJO): 로컬에 저장된 데이터가 없다면 StreamingAssets를 검사하여 모든 StreamingAssets의 AssetBundle을 가져옴
+            if (File.Exists(localManifestRawPath) == false)
+            {
+                var streamingAssetsPath = Path.Combine(Application.streamingAssetsPath, "Bundle");
+                if (Directory.Exists(streamingAssetsPath))
+                {
+                    var fileList = Directory.GetFiles(streamingAssetsPath);
+                    var fileListCount = fileList.Length;
+                    for (int i = 0; i < fileListCount; ++i)
+                    {
+                        if (fileList[i].Contains(".meta"))
+                        {
+                            continue;
+                        }
+                        
+                        var fileName = Path.GetFileName(fileList[i]);
+                        var destinationPath = Path.Combine(localAssetBundlePath, fileName);
+                        File.Copy(fileList[i], destinationPath);
+                        Debug.Log($"[PrepareDownload] Copy {fileList[i]} to {destinationPath}");
+                    }
+                }
+            }
+
+            // NOTE(JJO): 다시 로컬에 있는지 검사하여 가져옴
+            if (File.Exists(localManifestRawPath))
+            {
+                localManifestRaw = File.ReadAllText(localManifestRawPath);
+            }
+
+            var remoteManifestRawPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}.manifest" : $"{downloadUrl}{manifestName}.manifest";
+            using (var request = UnityWebRequest.Get(remoteManifestRawPath))
+            {
+                yield return request.SendWebRequest();
+
+                if (string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogError($"[PrepareDownload] Failed to load a manifest from {remoteManifestRawPath}\n{request.error}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                remoteManifestRaw = request.downloadHandler.text;
+            }
+            
+            if (string.IsNullOrEmpty(localManifestRaw) ||
+                localManifestRaw != remoteManifestRaw)
+            {
+                File.WriteAllText(localManifestRawPath, remoteManifestRaw);
+                
+                // NOTE(JJO): 먼저 AssetBundleManifest를 받아서 정보를 가져옴.
+                var remoteManifestPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}" : $"{downloadUrl}{manifestName}";
+
+                using (var request = UnityWebRequest.Get(remoteManifestPath))
+                {
+                    yield return request.SendWebRequest();
+
+                    if (request.isNetworkError ||
+                        request.isHttpError ||
+                        string.IsNullOrEmpty(request.error) == false)
+                    {
+                        Debug.LogError($"[PrepareDownload] Failed to load a manifest from {remoteManifestPath}\n{request.error}");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+
+                    _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
+                    
+                    File.WriteAllBytes(localManifestPath, request.downloadHandler.data);
+                }
+            }
+            else
+            {
+                _assetBundleManifestObject = AssetBundle.LoadFromFile(localManifestPath);
+            }
+            
+            _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(MANIFEST_NAME);
+
+            maximumAssetBundleCount = _assetBundleManifest.GetAllAssetBundles().Length;
+
             var localAssetBundleFileNameList = Directory.GetFiles(localAssetBundlePath).ToList();
             var assetList = _assetBundleManifest.GetAllAssetBundles();
             var listCount = assetList.Length;
@@ -237,7 +262,9 @@ namespace JJFramework.Runtime
                     for (var fileIndex = localAssetBundleFileNameListCount - 1; fileIndex >= 0; --fileIndex)
                     {
                         var fileName = Path.GetFileName(localAssetBundleFileNameList[fileIndex]);
-                        if (fileName == assetList[assetIndex] ||
+                        if (fileName == manifestName ||
+                            fileName == $"{manifestName}.manifest" ||
+                            fileName == assetList[assetIndex] ||
                             fileName == $"{assetList[assetIndex]}.manifest")
                         {
                             localAssetBundleFileNameList.RemoveAt(fileIndex);
@@ -254,6 +281,62 @@ namespace JJFramework.Runtime
                     File.Delete(localAssetBundleFileNameList[fileIndex]);
                 }
             }
+
+            // NOTE(JJO): 받아야하는 에셋의 크기를 계산한다!
+            assetBundleTotalSize = 0;
+            for (int i = 0; i < listCount; ++i)
+            {
+                var downloadPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{assetList[i]}" : $"{downloadUrl}{assetList[i]}";
+                remoteManifestRawPath = $"{downloadPath}.manifest";
+                remoteManifestRaw = string.Empty;
+                localManifestRawPath = Path.Combine(localAssetBundlePath, $"{assetList[i]}.manifest");
+                if (File.Exists(localManifestRawPath))
+                {
+                    localManifestRaw = File.ReadAllText(localManifestRawPath);
+                }
+                else
+                {
+                    localManifestRaw = string.Empty;
+                }
+
+                using (var request = UnityWebRequest.Get(remoteManifestRawPath))
+                {
+                    yield return request.SendWebRequest();
+
+                    if (string.IsNullOrEmpty(request.error) == false)
+                    {
+                        Debug.LogError($"[PrepareDownload] Failed to download a {assetList[i]}.manifest from {remoteManifestRawPath}!\n{request.error}");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+
+                    remoteManifestRaw = request.downloadHandler.text;
+                }
+
+                if (string.IsNullOrEmpty(localManifestRaw) ||
+                    localManifestRaw != remoteManifestRaw)
+                {
+                    // NOTE(JJO): 받아야 하는 에셋의 크기를 구한다.
+                    using (var request = UnityWebRequest.Head(downloadPath))
+                    {
+                        yield return request.SendWebRequest();
+
+                        if (request.isNetworkError ||
+                            request.isHttpError)
+                        {
+                            Debug.LogError($"[PrepareDownload] Failed to get size of a {assetList[i]} from {downloadPath}!\n{request.error}");
+                            state = STATE.ERROR;
+                            yield break;
+                        }
+
+                        ulong assetBundleSize;
+                        ulong.TryParse(request.GetResponseHeader(CONTENT_LENGTH), out assetBundleSize);
+                        assetBundleTotalSize += assetBundleSize;
+                        
+                        _downloadingAssetBundleList.Add(assetList[i]);
+                    }
+                }
+            }
         }
 
         public IEnumerator DownloadAllAssetBundle()
@@ -262,8 +345,8 @@ namespace JJFramework.Runtime
             downloadedAssetBundleCount = 0;
             currentAssetBundleProgress = 0f;
 
-            var assetList = _assetBundleManifest.GetAllAssetBundles();
-            var listCount = assetList.Length;
+            var assetList = _downloadingAssetBundleList;// _assetBundleManifest.GetAllAssetBundles();
+            var listCount = assetList.Count;
         
             state = STATE.DOWNLOADING;
 
@@ -301,6 +384,10 @@ namespace JJFramework.Runtime
             for (var i = 0; i < listCount; ++i)
             {
                 yield return LoadAssetBundle(assetList[i]);
+                if (state == STATE.ERROR)
+                {
+                    yield break;
+                }
                 
                 // TODO(JJO): Dependency Load
                 var dependencies = _assetBundleManifest.GetAllDependencies(assetList[i]);
