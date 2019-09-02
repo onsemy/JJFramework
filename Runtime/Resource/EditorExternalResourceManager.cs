@@ -28,6 +28,7 @@ namespace JJFramework.Runtime.Resource
         public override T Load<T>(string assetBundleName, string assetName)
         {
 #if UNITY_EDITOR
+            assetName = Path.GetFileNameWithoutExtension(assetName);
             var assetList = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetBundleName, assetName);
             var listCount = assetList.Length;
             if (listCount == 0)
