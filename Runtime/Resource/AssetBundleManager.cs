@@ -102,6 +102,7 @@ namespace JJFramework.Runtime
                 ? $"{downloadUrl}/{assetBundleName}.manifest"
                 : $"{downloadUrl}{assetBundleName}.manifest";
             string localManifestPath = null;
+            string manifestRaw = null;
             using (var request = UnityWebRequest.Get(manifestPath))
             {
                 yield return request.SendWebRequest();
@@ -118,8 +119,8 @@ namespace JJFramework.Runtime
                 localManifestPath = Path.Combine(localAssetBundlePath, $"{assetBundleName}.manifest");
                 if (File.Exists(localManifestPath))
                 {
-                    var localManifest = File.ReadAllText(localManifestPath);
-                    if (request.downloadHandler.text == localManifest)
+                    manifestRaw = File.ReadAllText(localManifestPath);
+                    if (request.downloadHandler.text == manifestRaw)
                     {
                         Debug.Log($"[DownloadAssetBundle] Skipped to download - {assetBundleName} is latest version!");
                         ++downloadedAssetBundleCount;
@@ -127,6 +128,8 @@ namespace JJFramework.Runtime
                         yield break;
                     }
                 }
+
+                manifestRaw = request.downloadHandler.text;
             }
             
             var savePath = Path.Combine(localAssetBundlePath, assetBundleName);
@@ -153,7 +156,7 @@ namespace JJFramework.Runtime
                 ++downloadedAssetBundleCount;
                 
                 // NOTE(JJO): 다운로드가 진정(?)으로 완료되면 txt도 저장하도록 함.
-                File.WriteAllText(localManifestPath, request.downloadHandler.text);
+                File.WriteAllText(localManifestPath, manifestRaw);
                 Debug.Log($"[DownloadAssetBundle] Succeeded to download - {savePath}");
             }
         }
@@ -221,7 +224,6 @@ namespace JJFramework.Runtime
             if (string.IsNullOrEmpty(localManifestRaw) ||
                 localManifestRaw != remoteManifestRaw)
             {
-                
                 // NOTE(JJO): 먼저 AssetBundleManifest를 받아서 정보를 가져옴.
                 var remoteManifestPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}" : $"{downloadUrl}{manifestName}";
 
