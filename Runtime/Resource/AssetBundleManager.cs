@@ -44,6 +44,7 @@ namespace JJFramework.Runtime
         public int downloadedAssetBundleCount { get; private set; }
         public int loadedAssetBundleCount { get; private set; }
         public float currentAssetBundleProgress { get; private set; }
+        public ulong currentAssetBundleSize { get; private set; }
         public ulong assetBundleTotalSize { get; private set; }
 
         private int _skippedAssetBundleCount;
@@ -100,6 +101,7 @@ namespace JJFramework.Runtime
             var manifestPath = downloadUrl.EndsWith("/") == false
                 ? $"{downloadUrl}/{assetBundleName}.manifest"
                 : $"{downloadUrl}{assetBundleName}.manifest";
+            string localManifestPath = null;
             using (var request = UnityWebRequest.Get(manifestPath))
             {
                 yield return request.SendWebRequest();
@@ -113,10 +115,10 @@ namespace JJFramework.Runtime
                     yield break;
                 }
 
-                var path = Path.Combine(localAssetBundlePath, $"{assetBundleName}.manifest");
-                if (File.Exists(path))
+                localManifestPath = Path.Combine(localAssetBundlePath, $"{assetBundleName}.manifest");
+                if (File.Exists(localManifestPath))
                 {
-                    var localManifest = File.ReadAllText(path);
+                    var localManifest = File.ReadAllText(localManifestPath);
                     if (request.downloadHandler.text == localManifest)
                     {
                         Debug.Log($"[DownloadAssetBundle] Skipped to download - {assetBundleName} is latest version!");
@@ -125,8 +127,6 @@ namespace JJFramework.Runtime
                         yield break;
                     }
                 }
-                
-                File.WriteAllText(path, request.downloadHandler.text);
             }
             
             var savePath = Path.Combine(localAssetBundlePath, assetBundleName);
@@ -137,6 +137,7 @@ namespace JJFramework.Runtime
                 while (request.isDone == false)
                 {
                     currentAssetBundleProgress = request.downloadProgress;
+                    currentAssetBundleSize = request.downloadedBytes;
                     yield return null;
                 }
 
@@ -150,6 +151,9 @@ namespace JJFramework.Runtime
                 }
 
                 ++downloadedAssetBundleCount;
+                
+                // NOTE(JJO): 다운로드가 진정(?)으로 완료되면 txt도 저장하도록 함.
+                File.WriteAllText(localManifestPath, request.downloadHandler.text);
                 Debug.Log($"[DownloadAssetBundle] Succeeded to download - {savePath}");
             }
         }
@@ -217,7 +221,6 @@ namespace JJFramework.Runtime
             if (string.IsNullOrEmpty(localManifestRaw) ||
                 localManifestRaw != remoteManifestRaw)
             {
-                File.WriteAllText(localManifestRawPath, remoteManifestRaw);
                 
                 // NOTE(JJO): 먼저 AssetBundleManifest를 받아서 정보를 가져옴.
                 var remoteManifestPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{manifestName}" : $"{downloadUrl}{manifestName}";
@@ -238,6 +241,9 @@ namespace JJFramework.Runtime
                     _assetBundleManifestObject = AssetBundle.LoadFromMemory(request.downloadHandler.data, 0);
                     
                     File.WriteAllBytes(localManifestPath, request.downloadHandler.data);
+                    
+                    // NOTE(JJO): Manifest 쓰기가 완료되고 나서 txt도 쓴다.
+                    File.WriteAllText(localManifestRawPath, remoteManifestRaw);
                 }
             }
             else
