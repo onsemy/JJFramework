@@ -424,28 +424,25 @@ namespace JJFramework.Runtime
             }
             
             var path = Path.Combine(localAssetBundlePath, assetBundle);
-            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, 0))
+            var request = AssetBundle.LoadFromFileAsync(path, 0);
+            while (request.isDone == false)
             {
-                request.SendWebRequest();
-                while (request.isDone == false)
-                {
-                    currentAssetBundleProgress = request.downloadProgress;
-                    yield return null;
-                }
-
-                var bundle = DownloadHandlerAssetBundle.GetContent(request);
-                if (bundle == null)
-                {
-                    Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundle} is NULL\n{request.error}");
-                    state = STATE.ERROR;
-                    yield break;
-                }
-                
-                _assetBundleList.Add(assetBundle, bundle);
-                    
-                ++loadedAssetBundleCount;
-                Debug.Log($"[LoadAssetBundle] Succeeded to load - {assetBundle}");
+                currentAssetBundleProgress = request.progress;
+                yield return null;
             }
+
+            var bundle = request.assetBundle;
+            if (bundle == null)
+            {
+                Debug.LogError($"[LoadAssetBundle] Failed to load - {assetBundle} is NULL!");
+                state = STATE.ERROR;
+                yield break;
+            }
+                
+            _assetBundleList.Add(assetBundle, bundle);
+                    
+            ++loadedAssetBundleCount;
+            Debug.Log($"[LoadAssetBundle] Succeeded to load - {assetBundle}");
         }
 
         public AssetBundle GetAssetBundle(string assetBundleName)
