@@ -30,7 +30,7 @@ namespace JJFramework.Runtime
         private AssetBundle _assetBundleManifestObject;
         private AssetBundleManifest _assetBundleManifest;
         private readonly Dictionary<string, AssetBundle> _assetBundleList = new Dictionary<string, AssetBundle>(0);
-        private readonly List<string> _downloadingAssetBundleList = new List<string>(0);
+        private readonly Dictionary<string, uint> _downloadingAssetBundleList = new Dictionary<string, uint>(0);
 
         private static readonly string MANIFEST_NAME = "AssetBundleManifest";
         private static readonly string CONTENT_LENGTH = "Content-Length";
@@ -86,6 +86,24 @@ namespace JJFramework.Runtime
             }
         }
 
+        private uint GetCRC(string manifestRaw)
+        {
+            if (string.IsNullOrEmpty(manifestRaw))
+            {
+                return 0U;
+            }
+            
+            var filteredManifest = manifestRaw.Split('\n');
+            var crcRaw = filteredManifest[1];
+            var index = crcRaw.IndexOf(':') + 1;
+            crcRaw = crcRaw.Substring(index, crcRaw.Length - index);
+
+            uint result;
+            uint.TryParse(crcRaw, out result);
+
+            return result;
+        }
+
         public void Cleanup()
         {
             UnloadAllAssetBundle(true);
@@ -95,10 +113,10 @@ namespace JJFramework.Runtime
             _assetBundleManifestObject = null;
         }
 
-        private IEnumerator DownloadAssetBundle(string assetBundleName)
+        private IEnumerator DownloadAssetBundle(string assetBundleName, uint crc)
         {
             var path = $"{downloadUrl}{assetBundleName}";
-            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path))
+            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, crc, 0))
             {
                 request.SendWebRequest();
                 while (request.isDone == false)
@@ -110,7 +128,7 @@ namespace JJFramework.Runtime
 
                 if (string.IsNullOrEmpty(request.error) == false)
                 {
-                    Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
+                    Debug.LogError($"[DownloadAssetBundle] Network Error! - {assetBundleName} / {crc}\n{request.error}");
                     state = STATE.ERROR;
                     yield break;
                 }
@@ -119,12 +137,19 @@ namespace JJFramework.Runtime
                 _assetBundleList.Add(assetBundleName, bundle);
                 
                 ++downloadedAssetBundleCount;
-                Debug.Log($"[DownloadAssetBundle] Succeeded to download - {assetBundleName}");
+                Debug.Log($"[DownloadAssetBundle] Succeeded to download - {assetBundleName} / {crc}");
             }
         }
 
         public IEnumerator PrepareDownload(string url, string manifestName)
         {
+            // NOTE(JJO): url이 비어있다면 EDITOR모드임을 가정함.
+            if (string.IsNullOrEmpty(url))
+            {
+                state = STATE.LOADED;
+                yield break;
+            }
+            
             state = STATE.PREPARING;
 
             downloadUrl = url;
@@ -232,15 +257,10 @@ namespace JJFramework.Runtime
                         yield return req.SendWebRequest();
 
                         // NOTE(JJO): StreamingAssets에 파일이 없다면 바로 다운로드 리스트에 추가함.
-                        if (string.IsNullOrEmpty(req.error) == false)
+                        if (string.IsNullOrEmpty(req.error))
                         {
-                            Debug.LogWarning(
-                                $"[AssetBundleManager|PrepareDownload] {assetList[i]} is NOT FOUND from StreamingAssets");
-                            _downloadingAssetBundleList.Add(assetList[i]);
-                            continue;
+                            manifestSA = req.downloadHandler.text;
                         }
-
-                        manifestSA = req.downloadHandler.text;
                     }
 
                     path = $"{downloadUrl}{assetList[i]}.manifest";
@@ -259,9 +279,10 @@ namespace JJFramework.Runtime
                     }
 
                     // NOTE(JJO): Manifest가 다르다면 다운로드 리스트에 추가함.
-                    if (manifestSA != manifestRemote)
+                    if (string.IsNullOrEmpty(manifestSA) ||
+                        manifestSA != manifestRemote)
                     {
-                        _downloadingAssetBundleList.Add(assetList[i]);
+                        _downloadingAssetBundleList.Add(assetList[i], GetCRC(manifestRemote));
                     }
                     else
                     {
@@ -282,6 +303,8 @@ namespace JJFramework.Runtime
                         Debug.Log($"[AssetBundleManager|PrepareDownload] Preload from StreamingAssets - {assetList[i]}");
                     }
                 }
+                
+                maximumAssetBundleCount = _downloadingAssetBundleList.Count;
             }
         }
 
@@ -465,7 +488,7 @@ namespace JJFramework.Runtime
                         ulong.TryParse(request.GetResponseHeader(CONTENT_LENGTH), out assetBundleSize);
                         assetBundleTotalSize += assetBundleSize;
                         
-                        _downloadingAssetBundleList.Add(assetList[i]);
+                        _downloadingAssetBundleList.Add(assetList[i], GetCRC(remoteManifestRaw));
                     }
                 }
             }
@@ -482,13 +505,17 @@ namespace JJFramework.Runtime
         
             state = STATE.DOWNLOADING;
 
-            // NOTE(JJO): 로컬에 AssetBundle Download
-            for (var i = 0; i < listCount; ++i)
+            using (var iter = _downloadingAssetBundleList.GetEnumerator())
             {
-                yield return DownloadAssetBundle(assetList[i]);
-                if (state == STATE.ERROR)
+                while (iter.MoveNext())
                 {
-                    yield break;
+                    var data = iter.Current;
+
+                    yield return DownloadAssetBundle(data.Key, data.Value);
+                    if (state == STATE.ERROR)
+                    {
+                        yield break;
+                    }
                 }
             }
 
