@@ -97,44 +97,8 @@ namespace JJFramework.Runtime
 
         private IEnumerator DownloadAssetBundle(string assetBundleName)
         {
-            // NOTE(JJO): 먼저 Bundle의 Manifest 요청/검증
-            var manifestPath = downloadUrl.EndsWith("/") == false
-                ? $"{downloadUrl}/{assetBundleName}.manifest"
-                : $"{downloadUrl}{assetBundleName}.manifest";
-            string localManifestPath = null;
-            string manifestRaw = null;
-            using (var request = UnityWebRequest.Get(manifestPath))
-            {
-                yield return request.SendWebRequest();
-                
-                if (request.isNetworkError ||
-                    request.isHttpError ||
-                    string.IsNullOrEmpty(request.error) == false)
-                {
-                    Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
-                    state = STATE.ERROR;
-                    yield break;
-                }
-
-                localManifestPath = Path.Combine(localAssetBundlePath, $"{assetBundleName}.manifest");
-                if (File.Exists(localManifestPath))
-                {
-                    manifestRaw = File.ReadAllText(localManifestPath);
-                    if (request.downloadHandler.text == manifestRaw)
-                    {
-                        Debug.Log($"[DownloadAssetBundle] Skipped to download - {assetBundleName} is latest version!");
-                        ++downloadedAssetBundleCount;
-                        ++_skippedAssetBundleCount;
-                        yield break;
-                    }
-                }
-
-                manifestRaw = request.downloadHandler.text;
-            }
-            
-            var savePath = Path.Combine(localAssetBundlePath, assetBundleName);
-            var downloadPath = downloadUrl.EndsWith("/") == false ? $"{downloadUrl}/{assetBundleName}" : $"{downloadUrl}{assetBundleName}";
-            using (var request = new UnityWebRequest(downloadPath, UnityWebRequest.kHttpVerbGET, new DownloadHandlerFile(savePath), null))
+            var path = $"{downloadUrl}{assetBundleName}";
+            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path))
             {
                 request.SendWebRequest();
                 while (request.isDone == false)
@@ -144,20 +108,180 @@ namespace JJFramework.Runtime
                     yield return null;
                 }
 
-                if (request.isNetworkError ||
-                    request.isHttpError ||
-                    string.IsNullOrEmpty(request.error) == false)
+                if (string.IsNullOrEmpty(request.error) == false)
                 {
                     Debug.LogError($"[DownloadAssetBundle] Network Error!\n{request.error}");
                     state = STATE.ERROR;
                     yield break;
                 }
-
-                ++downloadedAssetBundleCount;
                 
-                // NOTE(JJO): 다운로드가 진정(?)으로 완료되면 txt도 저장하도록 함.
-                File.WriteAllText(localManifestPath, manifestRaw);
-                Debug.Log($"[DownloadAssetBundle] Succeeded to download - {savePath}");
+                var bundle = DownloadHandlerAssetBundle.GetContent(request);
+                _assetBundleList.Add(assetBundleName, bundle);
+                
+                ++downloadedAssetBundleCount;
+                Debug.Log($"[DownloadAssetBundle] Succeeded to download - {assetBundleName}");
+            }
+        }
+
+        public IEnumerator PrepareDownload(string url, string manifestName)
+        {
+            state = STATE.PREPARING;
+
+            downloadUrl = url;
+            
+            // TODO(JJO): StreamingAssets에서 로드한 흔적을 찾는다.
+            string manifestSA = null;
+            string manifestRemote = null;
+            
+            var pathSA = Path.Combine(Application.streamingAssetsPath, "Bundle");
+            var path = Path.Combine(pathSA, $"{manifestName}.manifest");
+            using (var request = UnityWebRequest.Get(path))
+            {
+                yield return request.SendWebRequest();
+
+                if (string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogWarning($"[AssetBundleManager|PrepareDownload] {manifestName} is NOT FOUND from StreamingAssets");
+                }
+                else
+                {
+                    manifestSA = request.downloadHandler.text;
+                }
+            }
+
+            path = $"{downloadUrl}{manifestName}.manifest";
+            using (var request = UnityWebRequest.Get(path))
+            {
+                yield return request.SendWebRequest();
+
+                if (string.IsNullOrEmpty(request.error) == false)
+                {
+                    Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                manifestRemote = request.downloadHandler.text;
+            }
+
+            if (string.IsNullOrEmpty(manifestSA) == false &&
+                manifestSA == manifestRemote)
+            {
+                // NOTE(JJO): 그냥 여기에서 바로 S.A로부터 로드해버리자.
+                path = Path.Combine(pathSA, manifestName);
+                var request = AssetBundle.LoadFromFileAsync(path);
+
+                yield return request;
+            
+                var bundle = request.assetBundle;
+                if (bundle == null)
+                {
+                    Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to load - {path}\nReason: Unknown");
+                    state = STATE.ERROR;
+                    yield break;
+                }
+
+                _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
+
+                var assetList = _assetBundleManifest.GetAllAssetBundles();
+                var listCount = assetList.Length;
+                for (int i = 0; i < listCount; ++i)
+                {
+                    path = Path.Combine(pathSA, assetList[i]);
+                    request = AssetBundle.LoadFromFileAsync(path);
+
+                    yield return request;
+
+                    bundle = request.assetBundle;
+                    if (bundle == null)
+                    {
+                        Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to load - {path}\nReason: Unknown");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+                    
+                    _assetBundleList.Add(assetList[i], bundle);
+                    Debug.Log($"[AssetBundleManager|PrepareDownload] Preload from StreamingAssets - {assetList[i]}");
+                }
+            }
+            else
+            {
+                path = $"{downloadUrl}{manifestName}";
+                using (var req = UnityWebRequestAssetBundle.GetAssetBundle(path))
+                {
+                    yield return req.SendWebRequest();
+
+                    if (string.IsNullOrEmpty(req.error) == false)
+                    {
+                        Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}");
+                        state = STATE.ERROR;
+                        yield break;
+                    }
+
+                    var bundle = DownloadHandlerAssetBundle.GetContent(req);
+                    _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
+                }
+
+                var assetList = _assetBundleManifest.GetAllAssetBundles();
+                var listCount = assetList.Length; 
+                for (int i = 0; i < listCount; ++i)
+                {
+                    path = Path.Combine(pathSA, $"{assetList[i]}.manifest");
+                    using (var req = UnityWebRequest.Get(path))
+                    {
+                        yield return req.SendWebRequest();
+
+                        // NOTE(JJO): StreamingAssets에 파일이 없다면 바로 다운로드 리스트에 추가함.
+                        if (string.IsNullOrEmpty(req.error) == false)
+                        {
+                            Debug.LogWarning(
+                                $"[AssetBundleManager|PrepareDownload] {assetList[i]} is NOT FOUND from StreamingAssets");
+                            _downloadingAssetBundleList.Add(assetList[i]);
+                            continue;
+                        }
+
+                        manifestSA = req.downloadHandler.text;
+                    }
+
+                    path = $"{downloadUrl}{assetList[i]}.manifest";
+                    using (var req = UnityWebRequest.Get(path))
+                    {
+                        yield return req.SendWebRequest();
+
+                        if (string.IsNullOrEmpty(req.error) == false)
+                        {
+                            Debug.LogError($"[AssetBundleManager|PrepareDownload] Network Error - {assetList[i]}\n{req.error}");
+                            state = STATE.ERROR;
+                            yield break;
+                        }
+
+                        manifestRemote = req.downloadHandler.text;
+                    }
+
+                    // NOTE(JJO): Manifest가 다르다면 다운로드 리스트에 추가함.
+                    if (manifestSA != manifestRemote)
+                    {
+                        _downloadingAssetBundleList.Add(assetList[i]);
+                    }
+                    else
+                    {
+                        path = Path.Combine(pathSA, assetList[i]);
+                        var request = AssetBundle.LoadFromFileAsync(path);
+
+                        yield return request;
+
+                        var bundle = request.assetBundle;
+                        if (bundle == null)
+                        {
+                            Debug.LogError($"[AssetBundleManager|PrepareDownload] {assetList[i]} NOT FOUND!");
+                            state = STATE.ERROR;
+                            yield break;
+                        }
+                        
+                        _assetBundleList.Add(assetList[i], bundle);
+                        Debug.Log($"[AssetBundleManager|PrepareDownload] Preload from StreamingAssets - {assetList[i]}");
+                    }
+                }
             }
         }
 
@@ -369,10 +493,10 @@ namespace JJFramework.Runtime
             }
 
             // NOTE(JJO): 모두 Skip이 아니라면 캐시를 비우도록 함! (Test)
-            if (_skippedAssetBundleCount != listCount)
-            {
-                Caching.ClearCache();
-            }
+//            if (_skippedAssetBundleCount != listCount)
+//            {
+//                Caching.ClearCache();
+//            }
         }
 
         public IEnumerator PreloadAllAssetBundle()
