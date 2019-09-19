@@ -181,7 +181,7 @@ namespace JJFramework.Runtime
 
                 if (string.IsNullOrEmpty(request.error) == false)
                 {
-                    Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}");
+                    Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}\nReason: {request.error}");
                     state = STATE.ERROR;
                     yield break;
                 }
@@ -238,7 +238,7 @@ namespace JJFramework.Runtime
 
                     if (string.IsNullOrEmpty(req.error) == false)
                     {
-                        Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}");
+                        Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to download - {path}\nReason: Unknown");
                         state = STATE.ERROR;
                         yield break;
                     }
@@ -612,7 +612,7 @@ namespace JJFramework.Runtime
             AssetBundle assetBundle;
             if (_assetBundleList.TryGetValue(assetBundleName, out assetBundle) == false)
             {
-                Debug.LogError($"[LoadAsset] Failed to load - {assetBundleName} is NOT EXIST!");
+                Debug.LogError($"[LoadAsset] Failed to load - {assetBundleName} / {assetName} is NOT EXIST!");
                 return null;
             }
             
@@ -622,7 +622,7 @@ namespace JJFramework.Runtime
                 return result;
             }
 
-            Debug.LogError($"[LoadAsset] Failed to load - {assetName} is NULL!");
+            Debug.LogError($"[LoadAsset] Failed to load - {assetBundleName} / {assetName} is NULL!");
             return null;
         }
 
