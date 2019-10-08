@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using JJFramework.Runtime.Extension;
 using UniRx;
+using UniRx.Async;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
