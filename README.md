@@ -27,6 +27,7 @@ Unity 프로젝트의 Assets 폴더 안에 적절한 곳에
 ### 의존성 패키지
 
 - [`UniRx`](https://github.com/neuecc/UniRx): Unity 프로젝트 내에 넣어주세요!
+  - [`UniRx.Async`](https://github.com/Cysharp/UniTask): UniRx에서 Async 부분이 분리됨에 따라 따로 추가해야 합니다!
 - [`JsonDotNet`](https://www.parentelement.com/assets/json_net_unity): Unity 프로젝트 내에 넣어주세요!
 
 ## 기여
