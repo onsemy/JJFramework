@@ -7,8 +7,10 @@ namespace JJFramework.Runtime
 {
 	public class JJApplication : MonoSingleton<JJApplication>
 	{
-		private readonly List<ExMonoBehaviour> _updateList = new List<ExMonoBehaviour>(0);
-		private readonly List<ExMonoBehaviour> _lateUpdateList = new List<ExMonoBehaviour>(0);
+		[SerializeField]
+		private List<ExMonoBehaviour> _updateList = new List<ExMonoBehaviour>(0);
+		[SerializeField]
+		private List<ExMonoBehaviour> _lateUpdateList = new List<ExMonoBehaviour>(0);
 
 		public void RegisterUpdate(ExMonoBehaviour behaviour)
 		{
