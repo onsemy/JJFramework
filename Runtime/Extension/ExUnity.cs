@@ -35,9 +35,19 @@
             obj.transform.position = position;
         }
 
+        public static void SetPosition(this GameObject obj, float x, float y, float z)
+        {
+            obj.transform.position = new Vector3(x, y, z);
+        }
+
         public static void SetLocalPosition(this GameObject obj, Vector3 position)
         {
             obj.transform.localPosition = position;
+        }
+
+        public static void SetLocalPosition(this GameObject obj, float x, float y, float z)
+        {
+            obj.transform.localPosition = new Vector3(x, y, z);
         }
 
         public static void SetRotation(this GameObject obj, Quaternion rotation)

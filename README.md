@@ -1,4 +1,4 @@
-# [WIP] JJFramework
+# JJFramework
 
 ## 이것이 무엇인가요?
 
@@ -27,40 +27,9 @@ Unity 프로젝트의 Assets 폴더 안에 적절한 곳에
 ### 의존성 패키지
 
 - [`UniRx`](https://github.com/neuecc/UniRx): Unity 프로젝트 내에 넣어주세요!
+  - [`UniRx.Async`](https://github.com/Cysharp/UniTask): UniRx에서 Async 부분이 분리됨에 따라 따로 추가해야 합니다!
 - [`JsonDotNet`](https://www.parentelement.com/assets/json_net_unity): Unity 프로젝트 내에 넣어주세요!
 
-## 주요 기능
+## 기여
 
-### Runtime
-
-#### Attribute
-
-- `ComponentPath`
-
-#### Extension
-
-- `UnityEngine.Component` 확장
-- `UnityEngine.GameObject` 확장
-- `UnityEngine.MonoBehaviour` 확장
-- `string` 확장
-- `List<T>` 확장
-
-#### UI
-
-- `BaseUI` 및 `UIManager`
-
-#### Resource
-
-- Resource 관리
-  - Internal/External
-
-#### Util
-
-- `PlayerPrefsType`
-- `TableToUIText`
-- `WaitFor` 시리즈
-
-### Editor
-
-#### DB
-
+이 프로젝트를 Fork 한 후 [Pull Request](https://github.com/onsemy/JJFramework/pulls)를 올려주세요! 문의사항 또는 건의사항 등은 [Issue 게시판](https://github.com/onsemy/JJFramework/issues) 또는 [이메일](mailto:onsemy@gmail.com)로 보내주세요!

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace JJFramework.Runtime.Resource
 {
-    [DisallowMultipleComponent]
     public class SoundManager
     {
+        private static readonly string SOUND = "sound";
         private IResourceLoader _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
@@ -36,6 +36,19 @@ namespace JJFramework.Runtime.Resource
             GameObject.DontDestroyOnLoad(obj);
         }
 
+        public void Cleanup()
+        {
+            _effectSource.Clear();
+            _effectSource = null;
+
+            _musicSource = null;
+            
+            _clipsDic.Clear();
+            _clipsDic = null;
+
+            _resourceLoader = null;
+        }
+
         public void PreloadEffects(params string[] clipList)
         {
             if (clipList != null)
@@ -51,7 +64,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(clip);
+                var audio = _resourceLoader.Load<AudioClip>(SOUND, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);

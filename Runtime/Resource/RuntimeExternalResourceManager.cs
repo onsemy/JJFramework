@@ -6,38 +6,50 @@ namespace JJFramework.Runtime.Resource
 {
     public class RuntimeExternalResourceManager : BaseExternalResourceManager
     {
-        public override T Load<T>(string name)
+        public override T Load<T>(string assetName)
         {
-            var bundle = base.LoadAssetBundle($"bundle/{name}");
-            return bundle?.LoadAsset<T>(name);
+            return Load<T>(assetName, assetName);
         }
 
-        public override async Task<T> LoadAsync<T>(string name)
+        public override T Load<T>(string assetBundleName, string assetName)
         {
+            if (isInitialized == false)
+            {
+                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                return null;
+            }
+            
+            var result = assetBundleManager.LoadAsset<T>(assetBundleName, assetName);
+            return result;
+        }
+
+        public override async Task<T> LoadAsync<T>(string assetName)
+        {
+            return await LoadAsync<T>(assetName, assetName);
+        }
+
+        public override async Task<T> LoadAsync<T>(string assetBundleName, string assetName)
+        {
+            if (isInitialized == false)
+            {
+                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                return null;
+            }
+            
             var result = await Observable.Start(async () =>
             {
-                AssetBundle bundle = await base.LoadAssetBundleAsync($"bundle/{name}");
+                var asset = await assetBundleManager.LoadAssetAsync<T>(assetBundleName, assetName);
 
-                if (bundle == null)
+                if (asset == null)
                 {
-                    Debug.LogError($"{name} is null");
+                    Debug.LogError($"{assetName} is null");
                     return null;
                 }
 
-                var request = bundle.LoadAssetAsync<T>(name);
-                await request;
-                return request.asset as T;
+                return asset;
             });
 
             return result.Result;
-        }
-
-        public override async void PreloadAssetBundleAsync(string[] bundleList, System.Action<int, float, string> action)
-        {
-            for (int listLoop = 0; listLoop <= bundleList.Length; ++listLoop)
-            {
-                await LoadAssetBundleAsync($"bundle/{bundleList[listLoop]}", progress => action?.Invoke(listLoop + 1, progress, bundleList[listLoop]));
-            }
         }
     }
 }

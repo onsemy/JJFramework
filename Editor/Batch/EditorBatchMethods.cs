@@ -41,6 +41,7 @@ namespace JJFramework.Editor.Batch
         [MenuItem("@JJFramework/Build LocalDB")]
         public static async void BuildLocalDB()
         {
+            await Task.Delay(0);
             /* FIXME(jjo): 리펙토링 예정
             SetDefineSymbol("__USE_LOCALDB");
 

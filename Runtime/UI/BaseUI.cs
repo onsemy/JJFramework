@@ -14,14 +14,20 @@ namespace JJFramework.Runtime.UI
 
         //[ComponentPath] protected Button btnClose;
 
-        public bool isCalledCloseAction { get; protected set; }
+        protected System.Action<BaseUI> preCloseAction;
+
         public virtual void CloseAction()
         {
-            isCalledCloseAction = true;
+            preCloseAction?.Invoke(this);
 
             this.Hide();
 
             GameObject.Destroy(gameObject);
+        }
+
+        public void RegistPreCloseAction(System.Action<BaseUI> action)
+        {
+            preCloseAction = action;
         }
 
         protected override void Awake()
