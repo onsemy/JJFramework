@@ -3,19 +3,19 @@ using UnityEngine;
 
 namespace JJFramework.Runtime.Input
 {
-    public interface IInputManagerInterface
+    public interface IInputManager
     {
         void BindButtonEvent(string bindName, DelegateOnButton newEvent);
         void BindAxisEvent(string bindName, DelegateOnAxis newEvent);
         void UnBindButtonEvent(string bindName);
     }
 
-    public class InputManager : IInputManagerInterface
+    public class InputManager : IInputManager
     {
         static InputManager _instance = null;
         InputReceiver _inputReceiver = null;
 
-        static public IInputManagerInterface instance
+        public static IInputManager instance
         {
             get
             {
@@ -62,7 +62,7 @@ namespace JJFramework.Runtime.Input
 
         static InputManager GetInstance()
         {
-            if(_instance == null)
+            if (_instance == null)
             {
                 _instance = new InputManager();
             }
