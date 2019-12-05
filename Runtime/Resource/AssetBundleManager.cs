@@ -117,7 +117,8 @@ namespace JJFramework.Runtime
         private IEnumerator DownloadAssetBundle(string assetBundleName, uint crc)
         {
             var path = $"{downloadUrl}{assetBundleName}";
-            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, crc, 0))
+            var hash = _assetBundleManifest.GetAssetBundleHash(assetBundleName);
+            using (var request = UnityWebRequestAssetBundle.GetAssetBundle(path, hash, crc))
             {
                 request.SendWebRequest();
                 while (request.isDone == false)
