@@ -168,8 +168,30 @@
 
                 if (child == null)
                 {
-                    UnityEngine.Debug.LogError($"can't find child in {path}");
-                    continue;
+                    if (attribute.IsSelf)
+                    {
+                        // NOTE(JJO): 모든 자식들로부터 찾아본다. 
+                        var childList = behaviour.transform.GetComponentsInChildren<Transform>();
+                        foreach (var t in childList)
+                        {
+                            if (t.name.Equals(path))
+                            {
+                                child = t;
+                                break;
+                            }
+                        }
+
+                        if (child == null)
+                        {
+                            UnityEngine.Debug.LogError($"can't find child in {path}");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogError($"can't find child in {path}");
+                        continue;
+                    }
                 }
 
                 var member_comp = child.GetComponent(member_type);
