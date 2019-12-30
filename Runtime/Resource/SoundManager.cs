@@ -5,7 +5,6 @@ namespace JJFramework.Runtime.Resource
 {
     public class SoundManager
     {
-        private static readonly string SOUND = "sound";
         private IResourceLoader _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
@@ -14,13 +13,16 @@ namespace JJFramework.Runtime.Resource
         private Dictionary<string, AudioClip> _clipsDic = new Dictionary<string, AudioClip>();
         private int _currentIndex;
         private int _maxIndex;
+        private string _assetbundleName;
 
-        public void Init(IResourceLoader resourceLoader, int effectBuffer)
+        public void Init(IResourceLoader resourceLoader, int effectBuffer, string assetBundleName)
         {
             _resourceLoader = resourceLoader;
 
             _maxIndex = effectBuffer;
 
+            _assetbundleName = assetBundleName;
+            
             var obj = new GameObject(nameof(SoundManager));
 
             for (int listLoop = 0; listLoop < effectBuffer; ++listLoop)
@@ -64,7 +66,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(SOUND, clip);
+                var audio = _resourceLoader.Load<AudioClip>(_assetbundleName, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
