@@ -66,8 +66,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                string localAssetBundleName = _assetbundleName;
-                var audio = _resourceLoader.Load<AudioClip>(localAssetBundleName, clip);
+                var audio = _resourceLoader.Load<AudioClip>(_assetbundleName, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
