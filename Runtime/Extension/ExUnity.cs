@@ -171,7 +171,7 @@
                     if (attribute.IsSelf)
                     {
                         // NOTE(JJO): 모든 자식들로부터 찾아본다. 
-                        var childList = behaviour.transform.GetComponentsInChildren<Transform>();
+                        var childList = behaviour.transform.GetComponentsInChildren<Transform>(true);
                         foreach (var t in childList)
                         {
                             if (t.name.Equals(path))
