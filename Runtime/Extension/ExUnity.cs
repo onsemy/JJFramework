@@ -76,6 +76,28 @@
             return ("Assets/" + fpath.ToUnixPath().Substring(Application.dataPath.ToUnixPath().Length + 1)).ToUnixPath();
         }
 
+        public static Transform FindEx(this Transform tr, string name)
+        {
+            Transform child = null;
+            // NOTE(JJO): 모든 자식들로부터 찾아본다. 
+            var childList = tr.GetComponentsInChildren<Transform>(true);
+            foreach (var t in childList)
+            {
+                if (t.name.Equals(name))
+                {
+                    child = t;
+                    break;
+                }
+            }
+
+            if (child == null)
+            {
+                UnityEngine.Debug.LogError($"can't find child in {name}");
+            }
+
+            return child;
+        }
+        
         public static T GetComponentEx<T>(this GameObject go) where T : Component
         {
             if (go == null)
