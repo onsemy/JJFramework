@@ -171,7 +171,7 @@
         {
 #if UNITY_2019_1_OR_NEWER
             var canvas = rectTransform.GetParentCanvas();
-            var cam = canvas.worldCamera;
+            var cam = canvas.worldCamera ?? Camera.main;
             GameRuntime.Util.Debug.Log($"TopMenu Rect: {rectTransform.rect}");
             var worldCorners = new Vector3[4];
             rectTransform.GetWorldCorners(worldCorners);
