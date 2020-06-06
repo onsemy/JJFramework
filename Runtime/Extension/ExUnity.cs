@@ -1,4 +1,6 @@
-﻿namespace JJFramework.Runtime.Extension
+﻿using UnityEngine.UI.Extensions;
+
+namespace JJFramework.Runtime.Extension
 {
     using UnityEngine;
     using UnityEngine.UI;
@@ -162,6 +164,39 @@
         public static void SetColor(this Image image, float r = 1f, float g = 1f, float b = 1f, float a = 1f)
         {
             image.color = new Color(r, g, b, a);
+        }
+
+        public static void SetNotchPortrait(this RectTransform rectTransform)
+        {
+#if UNITY_2019
+            var canvas = rectTransform.GetParentCanvas();
+            var cam = canvas.worldCamera;
+            GameRuntime.Util.Debug.Log($"TopMenu Rect: {rectTransform.rect}");
+            var worldCorners = new Vector3[4];
+            rectTransform.GetWorldCorners(worldCorners);
+            for (int i = 0; i < worldCorners.Length; ++i)
+            {
+                worldCorners[i] = cam.WorldToScreenPoint(worldCorners[i]);
+                GameRuntime.Util.Debug.Log($"sp: {worldCorners[i]}");
+            }
+            var thisRect = new Rect(worldCorners[0].x, worldCorners[0].y, worldCorners[2].x - worldCorners[1].x, worldCorners[2].y - worldCorners[3].y);
+            GameRuntime.Util.Debug.Log($"This Rect: {thisRect}");
+
+            var scaleFactor = canvas.scaleFactor;
+            GameRuntime.Util.Debug.Log($"Scale Factor: {scaleFactor}");
+            foreach (var rect in Screen.cutouts)
+            {
+                GameRuntime.Util.Debug.Log($"Cutouts: {rect}");
+                if (thisRect.Overlaps(rect))
+                {
+                    GameRuntime.Util.Debug.Log("overlaps!");
+                    var prevPos = rectTransform.anchoredPosition;
+                    prevPos.y -= rect.height / scaleFactor;
+            
+                    rectTransform.anchoredPosition = prevPos;
+                }
+            }
+#endif
         }
     }
 
