@@ -1,6 +1,4 @@
-﻿using UnityEngine.UI.Extensions;
-
-namespace JJFramework.Runtime.Extension
+﻿namespace JJFramework.Runtime.Extension
 {
     using UnityEngine;
     using UnityEngine.UI;
@@ -14,6 +12,9 @@ namespace JJFramework.Runtime.Extension
     using System.Linq.Expressions;
     using System.Reflection;
     using JJFramework.Runtime.Attribute;
+#if UNITY_2019_1_OR_NEWER
+    using UnityEngine.UI.Extensions;
+#endif
 
     public static class ExUnity
     {
@@ -168,7 +169,7 @@ namespace JJFramework.Runtime.Extension
 
         public static void SetNotchPortrait(this RectTransform rectTransform)
         {
-#if UNITY_2019
+#if UNITY_2019_1_OR_NEWER
             var canvas = rectTransform.GetParentCanvas();
             var cam = canvas.worldCamera;
             GameRuntime.Util.Debug.Log($"TopMenu Rect: {rectTransform.rect}");
