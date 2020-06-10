@@ -42,13 +42,13 @@ namespace JJFramework.Editor.Batch
         public static void BuildAndroidAssetBundles()
         {
             var path = System.IO.Path.Combine(Application.dataPath, "..", "AssetBundles", "Android");
-            if (Directory.Exists(path) == false)
+            if (System.IO.Directory.Exists(path) == false)
             {
-                Directory.CreateDirectory(path);
+                System.IO.Directory.CreateDirectory(path);
             }
             
             var manifest = BuildPipeline.BuildAssetBundles(path, BuildAssetBundleOptions.None, BuildTarget.Android);
-            Debug.Log(manifest.GetAllAssetBundles());
+            UnityEngine.Debug.Log(manifest.GetAllAssetBundles());
             EditorUtility.DisplayDialog("Info",
                 $"Completed Android AssetBundles!\nCount: {manifest.GetAllAssetBundles().Length}", "OK");
             
