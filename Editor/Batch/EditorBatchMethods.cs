@@ -38,6 +38,23 @@ namespace JJFramework.Editor.Batch
             BuildPipeline.BuildPlayer(sceneArray, "UnityAndroid.apk", BuildTarget.Android, BuildOptions.None);
         }
 
+        [MenuItem("@JJFramework/Build Android AssetBundles")]
+        public static void BuildAndroidAssetBundles()
+        {
+            var path = System.IO.Path.Combine(Application.dataPath, "..", "AssetBundles", "Android");
+            if (Directory.Exists(path) == false)
+            {
+                Directory.CreateDirectory(path);
+            }
+            
+            var manifest = BuildPipeline.BuildAssetBundles(path, BuildAssetBundleOptions.None, BuildTarget.Android);
+            Debug.Log(manifest.GetAllAssetBundles());
+            EditorUtility.DisplayDialog("Info",
+                $"Completed Android AssetBundles!\nCount: {manifest.GetAllAssetBundles().Length}", "OK");
+            
+            EditorUtility.RevealInFinder(path);
+        }
+
         [MenuItem("@JJFramework/Build LocalDB")]
         public static async void BuildLocalDB()
         {
