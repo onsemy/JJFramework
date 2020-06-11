@@ -49,10 +49,15 @@ namespace JJFramework.Editor.Batch
             
             var manifest = BuildPipeline.BuildAssetBundles(path, BuildAssetBundleOptions.None, BuildTarget.Android);
             UnityEngine.Debug.Log(manifest.GetAllAssetBundles());
-            EditorUtility.DisplayDialog("Info",
-                $"Completed Android AssetBundles!\nCount: {manifest.GetAllAssetBundles().Length}", "OK");
-            
-            EditorUtility.RevealInFinder(path);
+
+            var args = System.Environment.GetCommandLineArgs();
+            if (args.Contains("-noRevealInFinder") == false)
+            {
+                EditorUtility.DisplayDialog("Info",
+                    $"Completed Android AssetBundles!\nCount: {manifest.GetAllAssetBundles().Length}", "OK");
+
+                EditorUtility.RevealInFinder(path);
+            }
         }
 
         [MenuItem("@JJFramework/Build LocalDB")]
