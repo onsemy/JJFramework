@@ -41,6 +41,11 @@ namespace JJFramework.Runtime
 			}
 		}
 
+		private void Awake()
+		{
+			DontDestroyOnLoad(gameObject);
+		}
+
 #if !UNITY_EDITOR
 		private static bool _applicationQuit = false;
 

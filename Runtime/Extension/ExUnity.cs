@@ -12,6 +12,9 @@
     using System.Linq.Expressions;
     using System.Reflection;
     using JJFramework.Runtime.Attribute;
+#if UNITY_2019_1_OR_NEWER
+    using UnityEngine.UI.Extensions;
+#endif
 
     public static class ExUnity
     {
@@ -76,6 +79,28 @@
             return ("Assets/" + fpath.ToUnixPath().Substring(Application.dataPath.ToUnixPath().Length + 1)).ToUnixPath();
         }
 
+        public static Transform FindEx(this Transform tr, string name)
+        {
+            Transform child = null;
+            // NOTE(JJO): 모든 자식들로부터 찾아본다. 
+            var childList = tr.GetComponentsInChildren<Transform>(true);
+            foreach (var t in childList)
+            {
+                if (t.name.Equals(name))
+                {
+                    child = t;
+                    break;
+                }
+            }
+
+            if (child == null)
+            {
+                UnityEngine.Debug.LogError($"can't find child in {name}");
+            }
+
+            return child;
+        }
+        
         public static T GetComponentEx<T>(this GameObject go) where T : Component
         {
             if (go == null)
@@ -141,6 +166,39 @@
         {
             image.color = new Color(r, g, b, a);
         }
+
+        public static void SetNotchPortrait(this RectTransform rectTransform)
+        {
+#if UNITY_2019_1_OR_NEWER
+            var canvas = rectTransform.GetParentCanvas();
+            var cam = canvas.worldCamera ?? Camera.main;
+            GameRuntime.Util.Debug.Log($"TopMenu Rect: {rectTransform.rect}");
+            var worldCorners = new Vector3[4];
+            rectTransform.GetWorldCorners(worldCorners);
+            for (int i = 0; i < worldCorners.Length; ++i)
+            {
+                worldCorners[i] = cam.WorldToScreenPoint(worldCorners[i]);
+                GameRuntime.Util.Debug.Log($"sp: {worldCorners[i]}");
+            }
+            var thisRect = new Rect(worldCorners[0].x, worldCorners[0].y, worldCorners[2].x - worldCorners[1].x, worldCorners[2].y - worldCorners[3].y);
+            GameRuntime.Util.Debug.Log($"This Rect: {thisRect}");
+
+            var scaleFactor = canvas.scaleFactor;
+            GameRuntime.Util.Debug.Log($"Scale Factor: {scaleFactor}");
+            foreach (var rect in Screen.cutouts)
+            {
+                GameRuntime.Util.Debug.Log($"Cutouts: {rect}");
+                if (thisRect.Overlaps(rect))
+                {
+                    GameRuntime.Util.Debug.Log("overlaps!");
+                    var prevPos = rectTransform.anchoredPosition;
+                    prevPos.y -= rect.height / scaleFactor;
+            
+                    rectTransform.anchoredPosition = prevPos;
+                }
+            }
+#endif
+        }
     }
 
     public static class ExAttributeUnity
@@ -168,8 +226,30 @@
 
                 if (child == null)
                 {
-                    UnityEngine.Debug.LogError($"can't find child in {path}");
-                    continue;
+                    if (attribute.IsSelf)
+                    {
+                        // NOTE(JJO): 모든 자식들로부터 찾아본다. 
+                        var childList = behaviour.transform.GetComponentsInChildren<Transform>(true);
+                        foreach (var t in childList)
+                        {
+                            if (t.name.Equals(path))
+                            {
+                                child = t;
+                                break;
+                            }
+                        }
+
+                        if (child == null)
+                        {
+                            UnityEngine.Debug.LogError($"can't find child in {path}");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogError($"can't find child in {path}");
+                        continue;
+                    }
                 }
 
                 var member_comp = child.GetComponent(member_type);
