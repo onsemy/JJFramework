@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace JJFramework.Runtime.Input
 {
@@ -7,11 +8,14 @@ namespace JJFramework.Runtime.Input
     {
         void BindButtonEvent(string bindName, DelegateOnButton newEvent);
         void BindAxisEvent(string bindName, DelegateOnAxis newEvent);
+        void BindAndroidBackEvent(UnityAction newEvent);
         void UnBindButtonEvent(string bindName);
     }
 
     public class InputManager : IInputManager
     {
+        static readonly string AndroidBackBindName = "AndroidBackButton";
+
         static InputManager _instance = null;
         InputReceiver _inputReceiver = null;
 
@@ -29,7 +33,7 @@ namespace JJFramework.Runtime.Input
             if (this._inputReceiver == null || newEvent == null)
                 return;
 
-            InputBindParam newParam = new InputBindParam(newEvent);
+            IInputBindParam newParam = new InputBindParamButton(bindName, newEvent);
             this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
@@ -38,8 +42,17 @@ namespace JJFramework.Runtime.Input
             if (this._inputReceiver == null || newEvent == null)
                 return;
 
-            InputBindParam newParam = new InputBindParam(newEvent);
-            this._inputReceiver.BindButtonEvent(bindName, newParam);
+            IInputBindParam newParam = new InputBindParamAxis(bindName, newEvent);
+            this._inputReceiver.BindButtonEvent(bindName, newParam);        
+        }
+
+        public void BindAndroidBackEvent(UnityAction newEvent)
+        {
+            if (this._inputReceiver == null || newEvent == null)
+                return;
+
+            IInputBindParam newParam = new InputBindParamAndroidBack(newEvent);
+            this._inputReceiver.BindButtonEvent(AndroidBackBindName, newParam);
         }
 
         public void UnBindButtonEvent(string bindName)
