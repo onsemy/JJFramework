@@ -5,9 +5,9 @@ namespace JJFramework.Runtime.Input
 {
     public class InputReceiver : MonoBehaviour
     {
-        private Dictionary<string, InputBindParam> _bindInfoGroup;
+        private Dictionary<string, IInputBindParam> _bindInfoGroup;
 
-        public void BindButtonEvent(string bindName, InputBindParam bindParam)
+        public void BindButtonEvent(string bindName, IInputBindParam bindParam)
         {
             if(this._bindInfoGroup.ContainsKey(bindName) == true)
             {
@@ -31,7 +31,7 @@ namespace JJFramework.Runtime.Input
         {
             DontDestroyOnLoad(this);
             name = "InputReceiver";
-            this._bindInfoGroup = new Dictionary<string, InputBindParam>();
+            this._bindInfoGroup = new Dictionary<string, IInputBindParam>();
         }
 
         void OnDestroy()
@@ -41,27 +41,8 @@ namespace JJFramework.Runtime.Input
 
         void Update()
         {
-            foreach(KeyValuePair<string, InputBindParam> element in this._bindInfoGroup)
-            {
-                string bindName = element.Key;
-                InputBindParam currentParam = element.Value;
-                if (currentParam.isAxisEvent == true && currentParam.isValidAxisEvent == true)
-                {
-                    float localValue = UnityEngine.Input.GetAxis(bindName);
-                    currentParam.axisEvent(localValue);
-                }
-                else if (currentParam.isButtonEvent == true && currentParam.isValidButtonEvent == true)
-                {                    
-                    if (UnityEngine.Input.GetButtonDown(bindName) == true)
-                    {
-                        currentParam.buttonEvent(true);
-                    }
-                    else if (UnityEngine.Input.GetButtonUp(bindName) == true)
-                    {
-                        currentParam.buttonEvent(false);
-                    }
-                }
-            }
+            foreach(KeyValuePair<string, IInputBindParam> element in this._bindInfoGroup)
+                element.Value?.Execute();
         }
     }
 }
