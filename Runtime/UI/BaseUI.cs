@@ -12,6 +12,8 @@ namespace JJFramework.Runtime.UI
             private set;
         }
 
+        public bool IsBackButtonEnabled { get; protected set; } = true;
+
         //[ComponentPath] protected Button btnClose;
 
         protected System.Action<BaseUI> preCloseAction;
