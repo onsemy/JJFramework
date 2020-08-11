@@ -139,5 +139,10 @@ namespace JJFramework.Runtime.Resource
         {
             _effectSource.Find(x => x == _clipsDic[clip])?.Stop();
         }
+
+        public void SetEffectVolume(float volume)
+        {
+            _effectSource.ForEach(d => d.volume = volume);
+        }
     }
 }
