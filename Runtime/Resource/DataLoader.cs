@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using JJFramework.Runtime.Attribute;
+using JJFramework.Runtime.Extension;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json;
 
@@ -26,15 +30,16 @@ namespace JJFramework.Runtime.Resource
             if (_loader == null)
             {
                 Debug.LogError($"NOTE(jjo): ResourceLoader is NOT INITIALIZED!");
-                return default(T);
+                return default;
             }
-            
-            string fileName = $"{typeof(T).Name}.bytes";
+
+            var tableName = GetTableName<T>();
+            var fileName = $"{tableName}.bytes";
             var asset = _loader.Load<TextAsset>(_assetBundleName, fileName);
             if (asset == null)
             {
                 Debug.LogError($"NOTE(jjo): cannot find {fileName}");
-                return default(T);
+                return default;
             }
             
             Stream stream = new MemoryStream(asset.bytes);
@@ -46,6 +51,20 @@ namespace JJFramework.Runtime.Resource
             Debug.Log($"Completed to load: {fileName}");
             
             return result;
+        }
+
+        private static string GetTableName<T>()
+        {
+            var classType = typeof(T);
+            var attributeType = typeof(TableAttribute);
+
+            var attribute = classType.GetCustomAttribute(attributeType, true) as TableAttribute;
+            if (attribute == null)
+            {
+                return typeof(T).Name;
+            }
+            
+            return attribute.name;
         }
 
         public static bool Load<T>(out T result)
