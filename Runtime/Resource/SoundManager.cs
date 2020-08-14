@@ -1,11 +1,13 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
+using GameRuntime.Core;
 
 namespace JJFramework.Runtime.Resource
 {
     public class SoundManager
     {
-        private IResourceLoader _resourceLoader;
+        private Func<string, string, AudioClip> _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
         private AudioSource _musicSource;
@@ -18,7 +20,7 @@ namespace JJFramework.Runtime.Resource
         private float _bgmVolume = 1f;
         private float _effectVolume = 1f;
 
-        public void Init(IResourceLoader resourceLoader, int effectBuffer, string assetBundleName)
+        public void Init(Func<string, string, AudioClip> resourceLoader, int effectBuffer, string assetBundleName)
         {
             _resourceLoader = resourceLoader;
 
@@ -69,7 +71,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(_assetbundleName, clip);
+                var audio = _resourceLoader?.Invoke(_assetbundleName, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);

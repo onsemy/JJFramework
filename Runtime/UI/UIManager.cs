@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using GameRuntime.Core;
 using JJFramework.Runtime.Extension;
 using JJFramework.Runtime.Resource;
 
@@ -10,9 +12,9 @@ namespace JJFramework.Runtime.UI
     [DisallowMultipleComponent]
     public class UIManager
     {
-        private static readonly string UI = "ui";
+        private static readonly string UI = "ui/Prefab";
         
-        private IResourceLoader _resourceLoader;
+        private Func<string, string, GameObject> _resourceLoader;
 
         public class UIPack
         {
@@ -36,11 +38,11 @@ namespace JJFramework.Runtime.UI
         private Transform _uiRoot;
         private Canvas _canvas;
 
-        public void Init(IResourceLoader loader, Vector2 screenSize, int sortingOrder = 100)
+        public void Init(Func<string, string, GameObject> loader, Vector2 screenSize, int sortingOrder = 100)
         {
             _resourceLoader = loader;
 
-            GameObject obj = new GameObject(nameof(UIManager));
+            var obj = new GameObject(nameof(UIManager));
 
             _canvas = obj.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -80,7 +82,7 @@ namespace JJFramework.Runtime.UI
 
         public T Generate<T>() where T : BaseUI
         {
-            var origin = _resourceLoader.Load<GameObject>(UI, typeof(T).Name);
+            var origin = _resourceLoader?.Invoke(UI, $"{typeof(T).Name}.prefab");
             if (origin == null)
             {
                 Debug.LogError($"{nameof(T)}을(를) 불러오지 못했습니다! - origin이 NULL입니다!");

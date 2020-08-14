@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.IO;
 using System.Reflection;
 using JJFramework.Runtime.Attribute;
@@ -9,7 +10,10 @@ namespace JJFramework.Runtime.Resource
 {
     public class DataLoader
     {
-        private static IResourceLoader _loader;
+        /// <summary>
+        /// assetBundleNames, assetNames, return TextAssets
+        /// </summary>
+        private static Func<string, string, TextAsset> _loader;
         private static string _assetBundleName;
 
         ~DataLoader()
@@ -17,7 +21,7 @@ namespace JJFramework.Runtime.Resource
             _loader = null;
         }
         
-        public static void SetResourceLoader(IResourceLoader loader, string assetBundleName)
+        public static void SetResourceLoader(Func<string, string, TextAsset> loader, string assetBundleName)
         {
             _loader = loader;
             _assetBundleName = assetBundleName;
@@ -33,7 +37,7 @@ namespace JJFramework.Runtime.Resource
 
             var tableName = GetTableName<T>();
             var fileName = $"{tableName}.bytes";
-            var asset = _loader.Load<TextAsset>(_assetBundleName, fileName);
+            var asset = _loader.Invoke(_assetBundleName, fileName);
             if (asset == null)
             {
                 Debug.LogError($"NOTE(jjo): cannot find {fileName}");
@@ -44,7 +48,7 @@ namespace JJFramework.Runtime.Resource
             
             var reader = new BsonReader(stream);
             var serializer = new JsonSerializer();
-            T result = serializer.Deserialize<T>(reader);
+            var result = serializer.Deserialize<T>(reader);
             
             Debug.Log($"Completed to load: {fileName}");
             
