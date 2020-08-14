@@ -1,9 +1,11 @@
-﻿using UnityEngine.Events;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
 namespace JJFramework.Runtime.Input
 {
     public delegate void DelegateOnButton(bool inButtonDown);
     public delegate void DelegateOnAxis(float inValue);
+    public delegate void DelegateMousePosition(Vector3 inMousePosition);
 
     public interface IInputBindParam
     {
@@ -65,6 +67,21 @@ namespace JJFramework.Runtime.Input
         {
             if(UnityEngine.Input.GetKey(UnityEngine.KeyCode.Escape))
                 buttonEvent?.Invoke();
+        }
+    }
+
+    public class InputBindParamMousePosition : IInputBindParam
+    {
+        private DelegateMousePosition mousePositionEvent;
+
+        public InputBindParamMousePosition(DelegateMousePosition newEvent)
+        {
+            mousePositionEvent = newEvent;
+        }
+
+        public void Execute()
+        {
+            mousePositionEvent?.Invoke(UnityEngine.Input.mousePosition);
         }
     }
 }
