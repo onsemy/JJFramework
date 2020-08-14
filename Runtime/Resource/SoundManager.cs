@@ -15,6 +15,9 @@ namespace JJFramework.Runtime.Resource
         private int _maxIndex;
         private string _assetbundleName;
 
+        private float _bgmVolume = 1f;
+        private float _effectVolume = 1f;
+
         public void Init(IResourceLoader resourceLoader, int effectBuffer, string assetBundleName)
         {
             _resourceLoader = resourceLoader;
@@ -88,7 +91,7 @@ namespace JJFramework.Runtime.Resource
         {
             _effectSource[_currentIndex].clip = clip;
             _effectSource[_currentIndex].loop = isLoop;
-            _effectSource[_currentIndex].volume = volume;
+            _effectSource[_currentIndex].volume = _effectVolume * volume;
             _effectSource[_currentIndex].Play();
 
             var current = _currentIndex;
@@ -111,12 +114,13 @@ namespace JJFramework.Runtime.Resource
         {
             _musicSource.clip = clip;
             _musicSource.loop = isLoop;
-            _musicSource.volume = volume;
+            _musicSource.volume = _bgmVolume * volume;
             _musicSource.Play();
         }
 
         public void SetBGMVolume(float volume)
         {
+            _bgmVolume = volume;
             _musicSource.volume = volume;
         }
 
@@ -138,6 +142,12 @@ namespace JJFramework.Runtime.Resource
         public void Stop(string clip)
         {
             _effectSource.Find(x => x == _clipsDic[clip])?.Stop();
+        }
+
+        public void SetEffectVolume(float volume)
+        {
+            _effectVolume = volume;
+            _effectSource.ForEach(d => d.volume = volume);
         }
     }
 }

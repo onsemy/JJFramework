@@ -200,15 +200,15 @@ namespace JJFramework.Runtime
 
                 yield return request;
             
-                var bundle = request.assetBundle;
-                if (bundle == null)
+                _assetBundleManifestObject = request.assetBundle;
+                if (_assetBundleManifestObject == null)
                 {
                     Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to load - {path}\nReason: Unknown");
                     state = STATE.ERROR;
                     yield break;
                 }
 
-                _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
+                _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
 
                 var assetList = _assetBundleManifest.GetAllAssetBundles();
                 var listCount = assetList.Length;
@@ -219,7 +219,7 @@ namespace JJFramework.Runtime
 
                     yield return request;
 
-                    bundle = request.assetBundle;
+                    var bundle = request.assetBundle;
                     if (bundle == null)
                     {
                         Debug.LogError($"[AssetBundleManager|PrepareDownload] Failed to load - {path}\nReason: Unknown");
@@ -245,8 +245,8 @@ namespace JJFramework.Runtime
                         yield break;
                     }
 
-                    var bundle = DownloadHandlerAssetBundle.GetContent(req);
-                    _assetBundleManifest = bundle.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
+                    _assetBundleManifestObject = DownloadHandlerAssetBundle.GetContent(req);
+                    _assetBundleManifest = _assetBundleManifestObject.LoadAsset<AssetBundleManifest>(nameof(AssetBundleManifest));
                 }
 
                 var assetList = _assetBundleManifest.GetAllAssetBundles();
