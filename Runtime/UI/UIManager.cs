@@ -67,6 +67,8 @@ namespace JJFramework.Runtime.UI
 
         public void Cleanup()
         {
+            CloseAll();
+            
             foreach (var uiPack in _uiStackList)
             {
                 uiPack.Cleanup();

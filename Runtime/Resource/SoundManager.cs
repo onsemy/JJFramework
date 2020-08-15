@@ -45,6 +45,9 @@ namespace JJFramework.Runtime.Resource
 
         public void Cleanup()
         {
+            StopAllEffect();
+            StopBGM();
+            
             _effectSource.Clear();
             _effectSource = null;
 
