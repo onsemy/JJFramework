@@ -136,7 +136,7 @@ namespace JJFramework.Runtime.Resource
 
         public void StopAllEffect()
         {
-            _effectSource.ForEach(x => x.Stop());
+            _effectSource.ForEach(x => x?.Stop());
         }
 
         public void StopBGM()
