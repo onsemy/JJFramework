@@ -8,7 +8,8 @@ namespace JJFramework.Runtime.Input
     {
         void BindButtonEvent(string bindName, DelegateOnButton newEvent);
         void BindAxisEvent(string bindName, DelegateOnAxis newEvent);
-        void BindAndroidBackEvent(UnityAction newEvent);
+        void BindAndroidBackEvent(string bindName, UnityAction newEvent);
+        void BindMouseMoveEvent(in string bindName, in DelegateMousePosition newEvent);
         void UnBindButtonEvent(string bindName);
     }
 
@@ -46,13 +47,22 @@ namespace JJFramework.Runtime.Input
             this._inputReceiver.BindButtonEvent(bindName, newParam);        
         }
 
-        public void BindAndroidBackEvent(UnityAction newEvent)
+        public void BindAndroidBackEvent(string bindName, UnityAction newEvent)
         {
             if (this._inputReceiver == null || newEvent == null)
                 return;
 
             IInputBindParam newParam = new InputBindParamAndroidBack(newEvent);
-            this._inputReceiver.BindButtonEvent(AndroidBackBindName, newParam);
+            this._inputReceiver.BindButtonEvent(bindName, newParam);
+        }
+
+        public void BindMouseMoveEvent(in string bindName, in DelegateMousePosition newEvent)
+        {
+            if (this._inputReceiver == null || newEvent == null)
+                return;
+
+            IInputBindParam newParam = new InputBindParamMousePosition(newEvent);
+            this._inputReceiver.BindButtonEvent(bindName, newParam);
         }
 
         public void UnBindButtonEvent(string bindName)
@@ -81,5 +91,7 @@ namespace JJFramework.Runtime.Input
             }
             return _instance;
         }
+
+        
     }
 }
