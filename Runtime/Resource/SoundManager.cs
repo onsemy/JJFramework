@@ -86,10 +86,10 @@ namespace JJFramework.Runtime.Resource
             }
         }
 
-        public void PlaySingle(string clip, bool isLoop = false, float volume = 1f)
+        public int PlaySingle(string clip, bool isLoop = false, float volume = 1f)
         {
             LoadClip(clip);
-            PlaySingle(_clipsDic[clip], isLoop, volume);
+            return PlaySingle(_clipsDic[clip], isLoop, volume);
         }
 
         public int PlaySingle(AudioClip clip, bool isLoop = false, float volume = 1f)
