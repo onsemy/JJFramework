@@ -135,17 +135,17 @@ namespace JJFramework.Runtime.Resource
 
         public void StopAllEffect()
         {
-            _effectSource.ForEach(x => x?.Stop());
+            _effectSource?.ForEach(x => x?.Stop());
         }
 
         public void StopBGM()
         {
-            _musicSource.Stop();
+            _musicSource?.Stop();
         }
 
         public void Stop(string clip)
         {
-            _effectSource.Find(x => x == _clipsDic[clip])?.Stop();
+            _effectSource?.Find(x => x == _clipsDic[clip])?.Stop();
         }
 
         public void SetEffectVolume(float volume)
