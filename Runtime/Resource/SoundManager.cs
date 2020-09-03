@@ -1,7 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
-using GameRuntime.Core;
 
 namespace JJFramework.Runtime.Resource
 {

@@ -172,25 +172,20 @@
 #if UNITY_2019_1_OR_NEWER
             var canvas = rectTransform.GetParentCanvas();
             var cam = canvas.worldCamera ?? Camera.main;
-            GameRuntime.Util.Debug.Log($"TopMenu Rect: {rectTransform.rect}");
+
             var worldCorners = new Vector3[4];
             rectTransform.GetWorldCorners(worldCorners);
             for (int i = 0; i < worldCorners.Length; ++i)
             {
                 worldCorners[i] = cam.WorldToScreenPoint(worldCorners[i]);
-                GameRuntime.Util.Debug.Log($"sp: {worldCorners[i]}");
             }
             var thisRect = new Rect(worldCorners[0].x, worldCorners[0].y, worldCorners[2].x - worldCorners[1].x, worldCorners[2].y - worldCorners[3].y);
-            GameRuntime.Util.Debug.Log($"This Rect: {thisRect}");
 
             var scaleFactor = canvas.scaleFactor;
-            GameRuntime.Util.Debug.Log($"Scale Factor: {scaleFactor}");
             foreach (var rect in Screen.cutouts)
             {
-                GameRuntime.Util.Debug.Log($"Cutouts: {rect}");
                 if (thisRect.Overlaps(rect))
                 {
-                    GameRuntime.Util.Debug.Log("overlaps!");
                     var prevPos = rectTransform.anchoredPosition;
                     prevPos.y -= rect.height / scaleFactor;
             
