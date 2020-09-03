@@ -135,12 +135,21 @@ namespace JJFramework.Runtime.Resource
 
         public void StopAllEffect()
         {
-            _effectSource?.ForEach(x => x?.Stop());
+            _effectSource?.ForEach(x =>
+            {
+                if (ReferenceEquals(x, null) == false)
+                {
+                    x.Stop();
+                }
+            });
         }
 
         public void StopBGM()
         {
-            _musicSource?.Stop();
+            if (ReferenceEquals(_musicSource, null) == false)
+            {
+                _musicSource.Stop();
+            }
         }
 
         public void Stop(string clip)
