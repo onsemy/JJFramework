@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using UniRx;
-using UniRx.Async;
+using Cysharp.Threading.Tasks;
 
 namespace JJFramework.Runtime.Resource
 {

@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using GameRuntime.Core;
 using JJFramework.Runtime.Extension;
 using JJFramework.Runtime.Resource;
 
