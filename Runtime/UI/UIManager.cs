@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,9 @@ namespace JJFramework.Runtime.UI
     [DisallowMultipleComponent]
     public class UIManager
     {
-        private static readonly string UI = "ui";
+        private static readonly string UI = "ui/Prefab";
         
-        private IResourceLoader _resourceLoader;
+        private Func<string, string, GameObject> _resourceLoader;
 
         public class UIPack
         {
@@ -36,11 +37,11 @@ namespace JJFramework.Runtime.UI
         private Transform _uiRoot;
         private Canvas _canvas;
 
-        public void Init(IResourceLoader loader, Vector2 screenSize, int sortingOrder = 100)
+        public void Init(Func<string, string, GameObject> loader, Vector2 screenSize, int sortingOrder = 100)
         {
             _resourceLoader = loader;
 
-            GameObject obj = new GameObject(nameof(UIManager));
+            var obj = new GameObject(nameof(UIManager));
 
             _canvas = obj.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceCamera;
@@ -65,6 +66,8 @@ namespace JJFramework.Runtime.UI
 
         public void Cleanup()
         {
+            CloseAll();
+            
             foreach (var uiPack in _uiStackList)
             {
                 uiPack.Cleanup();
@@ -80,7 +83,7 @@ namespace JJFramework.Runtime.UI
 
         public T Generate<T>() where T : BaseUI
         {
-            var origin = _resourceLoader.Load<GameObject>(UI, typeof(T).Name);
+            var origin = _resourceLoader?.Invoke(UI, $"{typeof(T).Name}.prefab");
             if (origin == null)
             {
                 Debug.LogError($"{nameof(T)}을(를) 불러오지 못했습니다! - origin이 NULL입니다!");
@@ -185,6 +188,11 @@ namespace JJFramework.Runtime.UI
             }
 
             // NOTE(JJO): Stack에서 다 지웠음에도 남아있을 수도 있어서 추가로 남겨둠
+            if (null == _uiRoot)
+            {
+                return;
+            }
+            
             foreach (Transform child in _uiRoot)
             {
                 GameObject.Destroy(child.gameObject);

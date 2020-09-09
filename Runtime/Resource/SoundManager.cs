@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace JJFramework.Runtime.Resource
 {
     public class SoundManager
     {
-        private IResourceLoader _resourceLoader;
+        private Func<string, string, AudioClip> _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
         private AudioSource _musicSource;
@@ -18,7 +19,7 @@ namespace JJFramework.Runtime.Resource
         private float _bgmVolume = 1f;
         private float _effectVolume = 1f;
 
-        public void Init(IResourceLoader resourceLoader, int effectBuffer, string assetBundleName)
+        public void Init(Func<string, string, AudioClip> resourceLoader, int effectBuffer, string assetBundleName)
         {
             _resourceLoader = resourceLoader;
 
@@ -43,6 +44,9 @@ namespace JJFramework.Runtime.Resource
 
         public void Cleanup()
         {
+            StopAllEffect();
+            StopBGM();
+            
             _effectSource.Clear();
             _effectSource = null;
 
@@ -69,7 +73,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader.Load<AudioClip>(_assetbundleName, clip);
+                var audio = _resourceLoader?.Invoke(_assetbundleName, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
@@ -81,10 +85,10 @@ namespace JJFramework.Runtime.Resource
             }
         }
 
-        public void PlaySingle(string clip, bool isLoop = false, float volume = 1f)
+        public int PlaySingle(string clip, bool isLoop = false, float volume = 1f)
         {
             LoadClip(clip);
-            PlaySingle(_clipsDic[clip], isLoop, volume);
+            return PlaySingle(_clipsDic[clip], isLoop, volume);
         }
 
         public int PlaySingle(AudioClip clip, bool isLoop = false, float volume = 1f)
@@ -131,17 +135,26 @@ namespace JJFramework.Runtime.Resource
 
         public void StopAllEffect()
         {
-            _effectSource.ForEach(x => x.Stop());
+            _effectSource?.ForEach(x =>
+            {
+                if (ReferenceEquals(x, null) == false)
+                {
+                    x.Stop();
+                }
+            });
         }
 
         public void StopBGM()
         {
-            _musicSource.Stop();
+            if (ReferenceEquals(_musicSource, null) == false)
+            {
+                _musicSource.Stop();
+            }
         }
 
         public void Stop(string clip)
         {
-            _effectSource.Find(x => x == _clipsDic[clip])?.Stop();
+            _effectSource?.Find(x => x == _clipsDic[clip])?.Stop();
         }
 
         public void SetEffectVolume(float volume)
