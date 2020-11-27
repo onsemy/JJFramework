@@ -2,7 +2,7 @@
 
 namespace JJFramework.Runtime.Attribute
 {
-    sealed class ComponentPathAttribute : System.Attribute
+    public sealed class ComponentPathAttribute : System.Attribute
     {
         public readonly string path;
         public bool IsSelf
@@ -10,32 +10,25 @@ namespace JJFramework.Runtime.Attribute
             get;
             private set;
         }
-        public bool IsCustomComponentSetting
+
+        public bool IsLoadFromEditor
         {
             get;
             private set;
         }
 
-        public ComponentPathAttribute(string path, bool is_custom_setting = true)
+        public ComponentPathAttribute(string path, bool isLoadFromEditor = false)
         {
             this.path = path;
             this.IsSelf = false;
-            this.IsCustomComponentSetting = is_custom_setting;
+            this.IsLoadFromEditor = isLoadFromEditor;
         }
 
-        public ComponentPathAttribute(bool is_custom_setting = true)
+        public ComponentPathAttribute(bool isLoadFromEditor = false)
         {
             this.path = null;
             this.IsSelf = true;
-            this.IsCustomComponentSetting = is_custom_setting;
+            this.IsLoadFromEditor = isLoadFromEditor;
         }
-
-        // TODO(jjo): 상위 컴포넌트에 대해 되게끔
-        //public ComponentPathAttribute(Component component, bool is_custom_setting = true)
-        //{
-        //    this.path = null;
-        //    this.IsSelf = false;
-        //    this.IsCustomComponentSetting = is_custom_setting;
-        //}
     }
 }

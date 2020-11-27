@@ -15,6 +15,25 @@
 #if UNITY_2019_1_OR_NEWER
     using UnityEngine.UI.Extensions;
 #endif
+    
+#if UNITY_EDITOR
+    using UnityEditor;
+    
+    [CustomEditor(typeof(MonoBehaviour), true)]
+    public class MonoBehaviourCustomEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+
+            var component = target as MonoBehaviour;
+            if (GUILayout.Button("Assign Components"))
+            {
+                component.LoadComponents(true);
+            }
+        }
+    }
+#endif
 
     public static class ExUnity
     {
@@ -198,24 +217,30 @@
 
     public static class ExAttributeUnity
     {
-        public static void LoadComponents(this MonoBehaviour behaviour)
+        public static void LoadComponents(this MonoBehaviour behaviour, bool isLoadFromEditor = false)
         {
-            var behaviour_type = behaviour.GetType();
-            var comp_type = typeof(Component);
-            var path_type = typeof(ComponentPathAttribute);
+            var behaviourType = behaviour.GetType();
+            var componentType = typeof(Component);
+            var pathType = typeof(ComponentPathAttribute);
 
-            var members = behaviour_type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            var members = behaviourType.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                           .Where(m =>
                                  (m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property)
-                                 && m.GetMemberType().IsSubclassOf(comp_type)
-                                 && m.GetCustomAttributes(path_type, true).Length == 1
+                                 && m.GetMemberType().IsSubclassOf(componentType)
+                                 && m.GetCustomAttributes(pathType, true).Length == 1
                                 );
 
             foreach (var item in members)
             {
-                var attribute = item.GetCustomAttributes(path_type, true)[0] as ComponentPathAttribute;
-                var path = (attribute.IsSelf) ? item.Name : attribute.path;
-                var member_type = item.GetMemberType();
+                var attribute = item.GetCustomAttributes(pathType, true)[0] as ComponentPathAttribute;
+                if (null == attribute
+                    || attribute.IsLoadFromEditor != isLoadFromEditor)
+                {
+                    continue;
+                }
+                
+                var path = attribute.IsSelf ? item.Name : attribute.path;
+                var memberType = item.GetMemberType();
 
                 var child = behaviour.transform.Find(path);
 
@@ -247,18 +272,18 @@
                     }
                 }
 
-                var member_comp = child.GetComponent(member_type);
+                var memberComponent = child.GetComponent(memberType);
 
-                if (member_comp == null)
-                    member_comp = child.gameObject.AddComponent(member_type);
+                if (memberComponent == null)
+                    memberComponent = child.gameObject.AddComponent(memberType);
 
-                if (member_comp == null)
+                if (memberComponent == null)
                 {
-                    UnityEngine.Debug.LogError($"can't find componnet {path} {member_type}");
+                    UnityEngine.Debug.LogError($"can't find component {path} {memberType}");
                     continue;
                 }
 
-                item.SetValue(behaviour, member_comp);
+                item.SetValue(behaviour, memberComponent);
             }
         }
     }
