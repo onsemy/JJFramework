@@ -1,11 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using JJFramework.Runtime.Extension;
-using UniRx;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime
 {
@@ -37,7 +32,7 @@ namespace JJFramework.Runtime
 							
                             DontDestroyOnLoad(singletonObject);
 							
-                            Debug.Log($"[MonoSingleton] Created instance of {typeof(T).Name}");
+                            Debug.Log($"Created instance of {typeof(T).Name}");
                         }
                     }
 
