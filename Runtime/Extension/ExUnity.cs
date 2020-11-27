@@ -262,47 +262,70 @@
             }
         }
     }
-    /*
-    public static class ExDebug
+    
+    // NOTE(JJO): kimsama님의 gist를 참고하여 작성됨.
+    //            https://gist.github.com/kimsama/4123043
+    public static class Debug
     {
-        static readonly ILogger log = UnityEngine.Debug.unityLogger;
-
-        public static void SetEnable(bool enable)
+        public static bool isDebugBuild
         {
-            log.logEnabled = enable;
+            get { return UnityEngine.Debug.isDebugBuild; }
         }
-
-        /// <summary>I don't care where it was writing</summary>
-        public static void Log(string message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void Log(object message,
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            Log<object>(message, callerName);
+            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
+            var length = filePath.Length - lastIndexOf - 3;
+            UnityEngine.Debug.Log($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
         }
-
-        public static void Log(this ILogger logger, string message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void LogWarning(object message,
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            logger.Log(LogType.Log, $"<b>[{callerName}]</b>", message);
+            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
+            var length = filePath.Length - lastIndexOf - 3;
+            UnityEngine.Debug.LogWarning($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
         }
-
-        public static void Log<T>(string message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void LogError(object message,
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            log.Log(LogType.Log, $"<b>[{typeof(T).FullName} | {callerName}]</b> {message}");
+            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
+            var length = filePath.Length - lastIndexOf - 3;
+            UnityEngine.Debug.LogError($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
         }
-
-        public static void Log(this UnityEngine.Object obj, string message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void DrawLine(UnityEngine.Vector3 start, UnityEngine.Vector3 end, UnityEngine.Color color = default(UnityEngine.Color), float duration = 0f, bool depthTest = true)
         {
-            //UnityEngine.Debug.Log($"<b>[{obj.GetType().FullName} | {callerName}]</b> {message}");
-            log.Log(LogType.Log, $"<b>[{obj.GetType().FullName} | {callerName}]</b>", message, obj);
+            UnityEngine.Debug.DrawLine(start, end, color, duration, depthTest);
         }
-
-        public static void LogError<T>(string message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void DrawRay(UnityEngine.Vector3 start, UnityEngine.Vector3 dir, UnityEngine.Color color = default(UnityEngine.Color), float duration = 0f, bool depthTest = true)
         {
-            log.Log(LogType.Error, $"<b>[{typeof(T).FullName} | {callerName}]</b> {message}");
+            UnityEngine.Debug.DrawRay(start, dir, color, duration, depthTest);
         }
-
-        public static void LogWarning<T>(object message, [CallerMemberName] string callerName = "")
+        
+        [System.Diagnostics.Conditional("__DEBUG__")]
+        public static void Assert(bool condition, object message,
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string filePath = "",
+            [CallerLineNumber] int lineNumber = 0)
         {
-            log.Log(LogType.Warning, $"<b>[{typeof(T).FullName} | {callerName}]</b> {message}");
+            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
+            var length = filePath.Length - lastIndexOf - 3;
+            UnityEngine.Debug.Assert(condition, $"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
         }
     }
-    */
 }
