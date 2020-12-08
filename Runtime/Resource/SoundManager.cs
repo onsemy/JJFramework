@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.Resource
 {
@@ -69,7 +70,7 @@ namespace JJFramework.Runtime.Resource
             }
         }
 
-        private void LoadClip(string clip)
+        private bool LoadClip(string clip)
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
@@ -80,14 +81,22 @@ namespace JJFramework.Runtime.Resource
                 }
                 else
                 {
-                    Debug.LogError("AudioClip이 없어요!");
+                    Debug.LogError($"AudioClip이 없어요! - {clip}");
+                    return false;
                 }
             }
+
+            return true;
         }
 
         public int PlaySingle(string clip, bool isLoop = false, float volume = 1f)
         {
-            LoadClip(clip);
+            // NOTE(JJO): Load에 실패하면 재생하지 않는다.
+            if (false == LoadClip(clip))
+            {
+                return -1;
+            }
+            
             return PlaySingle(_clipsDic[clip], isLoop, volume);
         }
 
@@ -130,6 +139,13 @@ namespace JJFramework.Runtime.Resource
 
         public void StopEffect(int index)
         {
+            if (index < 0
+                || index >= _effectSource.Count)
+            {
+                Debug.LogError($"Invalid index - {index}");
+                return;
+            }
+            
             _effectSource[index].Stop();
         }
 
