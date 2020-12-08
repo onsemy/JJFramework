@@ -119,7 +119,12 @@ namespace JJFramework.Runtime.Resource
 
         public void PlayBGM(string clip, bool isLoop = true, float volume = 1f)
         {
-            LoadClip(clip);
+            // NOTE(JJO): Load에 실패하면 재생하지 않는다.
+            if (false == LoadClip(clip))
+            {
+                return;
+            }
+            
             PlayBGM(_clipsDic[clip], isLoop, volume);
         }
 
