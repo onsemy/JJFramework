@@ -19,7 +19,7 @@ namespace JJFramework.Runtime.Input
 
         public void UnBindButtonEvent(string bindName)
         {
-            if (this._bindInfoGroup.ContainsKey(bindName) == true)
+            if (this._bindInfoGroup.ContainsKey(bindName) == false)
             {
                 Debug.LogWarningFormat("Not Binding Info Bind Name : {0}", bindName);
                 return;
