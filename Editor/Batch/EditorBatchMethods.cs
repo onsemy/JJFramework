@@ -1,13 +1,9 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using UniRx;
 using UnityEditor;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Editor.Batch
 {
@@ -18,7 +14,7 @@ namespace JJFramework.Editor.Batch
         [MenuItem("@JJFramework/ResetPlayerPrefData")]
         public static void ResetPlayerPrefData()
         {
-            UnityEngine.Debug.Log("reset playerpref data");
+            Debug.Log("reset playerpref data");
             UnityEngine.PlayerPrefs.DeleteAll();
         }
 
@@ -48,7 +44,7 @@ namespace JJFramework.Editor.Batch
             }
             
             var manifest = BuildPipeline.BuildAssetBundles(path, BuildAssetBundleOptions.None, BuildTarget.Android);
-            UnityEngine.Debug.Log(manifest.GetAllAssetBundles());
+            Debug.Log(manifest.GetAllAssetBundles());
 
             var args = System.Environment.GetCommandLineArgs();
             if (args.Contains("-noRevealInFinder") == false)
@@ -97,7 +93,7 @@ namespace JJFramework.Editor.Batch
                 ////copy master db file
                 //System.IO.File.Copy($"{sourcePath}{masterDbFile}", $"{masterDbPath}{masterDbFile}", true);
 
-                UnityEngine.Debug.Log("complete localdb build");
+                Debug.Log("complete localdb build");
                 isDone = true;
             };
 
@@ -106,7 +102,7 @@ namespace JJFramework.Editor.Batch
                 await Task.Delay(0);
             }
 
-            UnityEngine.Debug.Log("request refresh asset database...");
+            Debug.Log("request refresh asset database...");
             AssetDatabase.Refresh();
             */
         }
@@ -124,7 +120,7 @@ namespace JJFramework.Editor.Batch
             defineSymbol = defineSymbol.Replace($";{symbol}", "");
             PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, defineSymbol);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS, defineSymbol);
-            UnityEngine.Debug.Log(defineSymbol);
+            Debug.Log(defineSymbol);
         }
 
         public static void SetDefineSymbol(string _symbol)
@@ -136,7 +132,7 @@ namespace JJFramework.Editor.Batch
                 defineSymbol += ";" + _symbol;
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android, defineSymbol);
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.iOS, defineSymbol);
-                UnityEngine.Debug.Log(defineSymbol);
+                Debug.Log(defineSymbol);
             }
         }
     }

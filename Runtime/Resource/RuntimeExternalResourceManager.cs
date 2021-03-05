@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using UniRx;
 using UnityEngine;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.Resource
 {
@@ -15,7 +16,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (isInitialized == false)
             {
-                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                Debug.LogWarning("Initialized FIRST!");
                 return null;
             }
             
@@ -32,7 +33,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (isInitialized == false)
             {
-                Debug.LogWarning("[RuntimeExternalResourceManager|Load<T>] Initialized FIRST!");
+                Debug.LogWarning("Initialized FIRST!");
                 return null;
             }
             

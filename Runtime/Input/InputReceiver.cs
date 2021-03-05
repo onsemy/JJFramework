@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.Input
 {
@@ -11,7 +12,7 @@ namespace JJFramework.Runtime.Input
         {
             if(this._bindInfoGroup.ContainsKey(bindName) == true)
             {
-                Debug.LogWarningFormat("Already Binding Info Bind Name : {0}", bindName);
+                Debug.LogWarning($"Already Binding Info Bind Name : {bindName}");
                 return;
             }
             this._bindInfoGroup.Add(bindName, bindParam);
@@ -21,7 +22,7 @@ namespace JJFramework.Runtime.Input
         {
             if (this._bindInfoGroup.ContainsKey(bindName) == false)
             {
-                Debug.LogWarningFormat("Not Binding Info Bind Name : {0}", bindName);
+                Debug.LogWarning($"Not Binding Info Bind Name : {bindName}");
                 return;
             }
             this._bindInfoGroup.Remove(bindName);

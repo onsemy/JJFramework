@@ -3,11 +3,7 @@
     using UnityEngine;
     using UnityEngine.UI;
     using System;
-    using System.Collections;
-    using System.Collections.Generic;
     using System.Linq;
-    using UniRx;
-    using System.Diagnostics;
     using System.Runtime.CompilerServices;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -114,7 +110,7 @@
 
             if (child == null)
             {
-                UnityEngine.Debug.LogError($"can't find child in {name}");
+                Debug.LogError($"can't find child in {name}");
             }
 
             return child;
@@ -124,7 +120,7 @@
         {
             if (go == null)
             {
-                UnityEngine.Debug.LogErrorFormat("[ERROR] go is null");
+                Debug.LogError("[ERROR] go is null");
                 return null;
             }
 
@@ -153,7 +149,7 @@
             var target = c.transform.Find(name);
             if (target == null)
             {
-                UnityEngine.Debug.Log("target is NULL");
+                Debug.Log("target is NULL");
                 return null;
             }
 
@@ -261,13 +257,13 @@
 
                         if (child == null)
                         {
-                            UnityEngine.Debug.LogError($"can't find child in {path}");
+                            Debug.LogError($"can't find child in {path}");
                             continue;
                         }
                     }
                     else
                     {
-                        UnityEngine.Debug.LogError($"can't find child in {path}");
+                        Debug.LogError($"can't find child in {path}");
                         continue;
                     }
                 }
@@ -279,7 +275,7 @@
 
                 if (memberComponent == null)
                 {
-                    UnityEngine.Debug.LogError($"can't find component {path} {memberType}");
+                    Debug.LogError($"can't find component {path} {memberType}");
                     continue;
                 }
 

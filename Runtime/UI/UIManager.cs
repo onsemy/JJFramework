@@ -4,7 +4,6 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using JJFramework.Runtime.Extension;
-using JJFramework.Runtime.Resource;
 using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.UI

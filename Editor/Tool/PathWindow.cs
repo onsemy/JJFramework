@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Editor.Tool
 {

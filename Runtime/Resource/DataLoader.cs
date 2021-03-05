@@ -5,6 +5,7 @@ using System.Reflection;
 using JJFramework.Runtime.Attribute;
 using Newtonsoft.Json.Bson;
 using Newtonsoft.Json;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.Resource
 {

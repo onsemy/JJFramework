@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime
 {

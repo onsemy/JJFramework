@@ -1,6 +1,6 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using UnityEngine;
+using Debug = JJFramework.Runtime.Extension.Debug;
 
 namespace JJFramework.Runtime.Util
 {
