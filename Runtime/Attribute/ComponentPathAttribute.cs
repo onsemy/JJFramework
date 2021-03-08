@@ -17,6 +17,11 @@ namespace JJFramework.Runtime.Attribute
             private set;
         }
 
+        /// <summary>
+        /// 직접 경로를 지정하여 할당한다.
+        /// </summary>
+        /// <param name="path">List<>타입을 설정한 경우 경로가 아닌 이름입니다.</param>
+        /// <param name="isLoadFromEditor"></param>
         public ComponentPathAttribute(string path, bool isLoadFromEditor = false)
         {
             this.path = path;

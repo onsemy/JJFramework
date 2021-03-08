@@ -220,13 +220,13 @@
             var pathType = typeof(ComponentPathAttribute);
 
             var members = behaviourType.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                          .Where(m =>
-                                 (m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property)
-                                 && m.GetMemberType().IsSubclassOf(componentType)
-                                 && m.GetCustomAttributes(pathType, true).Length == 1
-                                );
+                .Where(m =>
+                    (m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property)
+                    && m.GetCustomAttributes(pathType, true).Length == 1
+                );
 
-            foreach (var item in members)
+            var componentMembers = members.Where(m => m.GetMemberType().IsSubclassOf(componentType));
+            foreach (var item in componentMembers)
             {
                 var attribute = item.GetCustomAttributes(pathType, true)[0] as ComponentPathAttribute;
                 if (null == attribute
@@ -234,12 +234,11 @@
                 {
                     continue;
                 }
-                
+
                 var path = attribute.IsSelf ? item.Name : attribute.path;
                 var memberType = item.GetMemberType();
 
                 var child = behaviour.transform.Find(path);
-
                 if (child == null)
                 {
                     if (attribute.IsSelf)
@@ -254,16 +253,11 @@
                                 break;
                             }
                         }
-
-                        if (child == null)
-                        {
-                            Debug.LogError($"can't find child in {path}");
-                            continue;
-                        }
                     }
-                    else
+                    
+                    if (child == null)
                     {
-                        Debug.LogError($"can't find child in {path}");
+                        UnityEngine.Debug.LogError($"can't find child in {path}");
                         continue;
                     }
                 }
@@ -275,12 +269,52 @@
 
                 if (memberComponent == null)
                 {
-                    Debug.LogError($"can't find component {path} {memberType}");
+                    UnityEngine.Debug.LogError($"can't find component {path} {memberType}");
                     continue;
                 }
 
                 item.SetValue(behaviour, memberComponent);
             }
+            
+            // NOTE(JJO): List<>를 ComponentPath로 지정한 경우의 처리
+            var genericMembers = members.Where(m => m.GetMemberType().IsGenericType);
+            foreach (var item in genericMembers)
+            {
+                var attribute = item.GetCustomAttributes(pathType, true)[0] as ComponentPathAttribute;
+                if (null == attribute
+                    || attribute.IsLoadFromEditor != isLoadFromEditor)
+                {
+                    continue;
+                }
+
+                var genericType = item.GetMemberType().GenericTypeArguments[0];
+                if (!genericType.IsSubclassOf(componentType))
+                {
+                    continue;
+                }
+                
+                var objectName = attribute.IsSelf ? item.Name : attribute.path;
+ 
+                var listType = typeof(List<>).MakeGenericType(genericType);
+                var list = (IList)System.Activator.CreateInstance(listType);
+                
+                // TODO(JJO): 자식 오브젝트들을 찾는다.
+                var childList = behaviour.transform.GetComponentsInChildren(genericType, true);
+                foreach (var c in childList)
+                {
+                    if (c.name.Contains(objectName))
+                    {
+                        list.Add(c);
+                    }
+                }
+                
+                item.SetValue(behaviour, list);
+            }
+            
+#if UNITY_EDITOR
+            UnityEditor.PrefabUtility.RecordPrefabInstancePropertyModifications(behaviour);
+            UnityEditor.EditorUtility.SetDirty(behaviour);
+#endif
         }
     }
     
