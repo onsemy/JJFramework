@@ -182,6 +182,12 @@
             image.color = new Color(r, g, b, a);
         }
 
+        public static void SetAlpha(this Image image, float alpha)
+        {
+            var color = image.color;
+            image.color = new Color(color.r, color.g, color.b, alpha);
+        }
+
         public static void SetNotchPortrait(this RectTransform rectTransform)
         {
 #if UNITY_2019_1_OR_NEWER
