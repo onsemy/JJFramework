@@ -117,7 +117,7 @@ namespace JJFramework.Runtime.Resource
             return current;
         }
 
-        public void PlayBGM(string clip, bool isLoop = true, float volume = 1f)
+        public void PlayBGM(string clip, bool isLoop = true, float volume = 1f, float pitch = 1f)
         {
             // NOTE(JJO): Load에 실패하면 재생하지 않는다.
             if (false == LoadClip(clip))
@@ -125,15 +125,24 @@ namespace JJFramework.Runtime.Resource
                 return;
             }
             
-            PlayBGM(_clipsDic[clip], isLoop, volume);
+            PlayBGM(_clipsDic[clip], isLoop, volume, pitch);
         }
 
-        public void PlayBGM(AudioClip clip, bool isLoop = true, float volume = 1f)
+        public void PlayBGM(AudioClip clip, bool isLoop = true, float volume = 1f, float pitch = 1f)
         {
             _musicSource.clip = clip;
             _musicSource.loop = isLoop;
             _musicSource.volume = _bgmVolume * volume;
+            SetBGMPitch(pitch);
             _musicSource.Play();
+        }
+
+        public void SetBGMPitch(float pitch = 1f)
+        {
+            if (null != _musicSource)
+            {
+                _musicSource.pitch = pitch;
+            }
         }
 
         public void SetBGMVolume(float volume)
