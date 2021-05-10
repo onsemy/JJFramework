@@ -334,6 +334,14 @@
         {
             get { return UnityEngine.Debug.isDebugBuild; }
         }
+
+        private static void ConvertLog(object message, string memberName, string filePath, int lineNumber, System.Action<object> logFunction)
+        {
+            var convertPath = filePath.Replace("/", "\\");
+            var lastIndexOf = convertPath.LastIndexOf('\\') + 1;
+            var length = filePath.Length - lastIndexOf - 3;
+            logFunction.Invoke($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
+        }
         
         [System.Diagnostics.Conditional("__DEBUG__")]
         public static void Log(object message,
@@ -341,9 +349,7 @@
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
-            var length = filePath.Length - lastIndexOf - 3;
-            UnityEngine.Debug.Log($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
+            ConvertLog(message, memberName, filePath, lineNumber, UnityEngine.Debug.Log);
         }
         
         [System.Diagnostics.Conditional("__DEBUG__")]
@@ -352,9 +358,7 @@
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
-            var length = filePath.Length - lastIndexOf - 3;
-            UnityEngine.Debug.LogWarning($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
+            ConvertLog(message, memberName, filePath, lineNumber, UnityEngine.Debug.LogWarning);
         }
         
         [System.Diagnostics.Conditional("__DEBUG__")]
@@ -363,9 +367,7 @@
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
-            var length = filePath.Length - lastIndexOf - 3;
-            UnityEngine.Debug.LogError($"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
+            ConvertLog(message, memberName, filePath, lineNumber, UnityEngine.Debug.LogError);
         }
         
         [System.Diagnostics.Conditional("__DEBUG__")]
@@ -386,7 +388,8 @@
             [CallerFilePath] string filePath = "",
             [CallerLineNumber] int lineNumber = 0)
         {
-            var lastIndexOf = filePath.LastIndexOf('\\') + 1;
+            var convertPath = filePath.Replace("/", "\\");
+            var lastIndexOf = convertPath.LastIndexOf('\\') + 1;
             var length = filePath.Length - lastIndexOf - 3;
             UnityEngine.Debug.Assert(condition, $"<b>[{filePath.Substring(lastIndexOf, length)}::{memberName}:L{lineNumber}]</b> {message}");
         }
