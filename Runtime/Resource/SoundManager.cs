@@ -7,6 +7,8 @@ namespace JJFramework.Runtime.Resource
 {
     public class SoundManager
     {
+        private GameObject _soundManagerObject;
+        
         private Func<string, string, AudioClip> _resourceLoader;
 
         private List<AudioSource> _effectSource = new List<AudioSource>();
@@ -27,20 +29,22 @@ namespace JJFramework.Runtime.Resource
             _maxIndex = effectBuffer;
 
             _assetbundleName = assetBundleName;
-            
-            var obj = new GameObject(nameof(SoundManager));
+
+            if (null == _soundManagerObject)
+            {
+                _soundManagerObject = new GameObject($"[{nameof(SoundManager)}]");
+                GameObject.DontDestroyOnLoad(_soundManagerObject);
+            }
 
             for (int listLoop = 0; listLoop < effectBuffer; ++listLoop)
             {
-                var audioSource = obj.AddComponent<AudioSource>();
+                var audioSource = _soundManagerObject.AddComponent<AudioSource>();
                 audioSource.playOnAwake = false;
                 _effectSource.Add(audioSource);
             }
 
-            _musicSource = obj.AddComponent<AudioSource>();
+            _musicSource = _soundManagerObject.AddComponent<AudioSource>();
             _musicSource.playOnAwake = false;
-
-            GameObject.DontDestroyOnLoad(obj);
         }
 
         public void Cleanup()
@@ -57,6 +61,12 @@ namespace JJFramework.Runtime.Resource
             _clipsDic = null;
 
             _resourceLoader = null;
+
+            if (null != _soundManagerObject)
+            {
+                GameObject.Destroy(_soundManagerObject);
+                _soundManagerObject = null;
+            }
         }
 
         public void PreloadEffects(params string[] clipList)

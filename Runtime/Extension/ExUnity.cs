@@ -306,7 +306,6 @@
                 var listType = typeof(List<>).MakeGenericType(genericType);
                 var list = (IList)System.Activator.CreateInstance(listType);
                 
-                // TODO(JJO): 자식 오브젝트들을 찾는다.
                 var childList = behaviour.transform.GetComponentsInChildren(genericType, true);
                 foreach (var c in childList)
                 {
