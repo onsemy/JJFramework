@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 using Debug = JJFramework.Runtime.Extension.Debug;
@@ -11,16 +11,19 @@ namespace JJFramework.Runtime.Resource
         
         private Func<string, string, AudioClip> _resourceLoader;
 
-        private List<AudioSource> _effectSource = new List<AudioSource>();
+        private readonly List<AudioSource> _effectSource = new List<AudioSource>();
         private AudioSource _musicSource;
 
-        private Dictionary<string, AudioClip> _clipsDic = new Dictionary<string, AudioClip>();
+        private readonly Dictionary<string, AudioClip> _clipsDic = new Dictionary<string, AudioClip>();
         private int _currentIndex;
         private int _maxIndex;
-        private string _assetbundleName;
+        private string _assetBundleName;
 
         private float _bgmVolume = 1f;
+        public float BGMVolume => _bgmVolume;
+        
         private float _effectVolume = 1f;
+        public float EffectVolume => _effectVolume;
 
         public void Init(Func<string, string, AudioClip> resourceLoader, int effectBuffer, string assetBundleName)
         {
@@ -28,7 +31,7 @@ namespace JJFramework.Runtime.Resource
 
             _maxIndex = effectBuffer;
 
-            _assetbundleName = assetBundleName;
+            _assetBundleName = assetBundleName;
 
             if (null == _soundManagerObject)
             {
@@ -53,12 +56,10 @@ namespace JJFramework.Runtime.Resource
             StopBGM();
             
             _effectSource.Clear();
-            _effectSource = null;
 
             _musicSource = null;
             
             _clipsDic.Clear();
-            _clipsDic = null;
 
             _resourceLoader = null;
 
@@ -84,7 +85,7 @@ namespace JJFramework.Runtime.Resource
         {
             if (_clipsDic.ContainsKey(clip) == false)
             {
-                var audio = _resourceLoader?.Invoke(_assetbundleName, clip);
+                var audio = _resourceLoader?.Invoke(_assetBundleName, clip);
                 if (audio != null)
                 {
                     _clipsDic.Add(clip, audio);
@@ -175,7 +176,7 @@ namespace JJFramework.Runtime.Resource
 
         public void StopAllEffect()
         {
-            _effectSource?.ForEach(x =>
+            _effectSource.ForEach(x =>
             {
                 if (ReferenceEquals(x, null) == false)
                 {
@@ -194,7 +195,7 @@ namespace JJFramework.Runtime.Resource
 
         public void Stop(string clip)
         {
-            _effectSource?.Find(x => x == _clipsDic[clip])?.Stop();
+            _effectSource.FindAll(x => x.clip == _clipsDic[clip]).ForEach(x => x.Stop());
         }
 
         public void SetEffectVolume(float volume)
