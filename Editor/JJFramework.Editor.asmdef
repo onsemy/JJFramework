@@ -1,0 +1,16 @@
+{
+    "name": "JJFramework",
+    "references": [
+        "JJFramework.Editor.Batch",
+        "JJFramework.Editor.Extension"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
