@@ -1,25 +1,21 @@
 {
-  "name": "me.onsemy.jjframework",
-  "version": "0.0.1",
-  "displayName": "JJFramework",
-  "description" : "Unity에서 자주 사용했던, 유용했던 코드를 모아놓은 프레임워크입니다.",
-  "unity": "2019.1",
-  "documentationUrl" : "https://github.com/onsemy/JJFramework/blob/master/README.md",
-  "changelogUrl" : "https://github.com/onsemy/JJFramework/blob/master/CHANGELOG.md",
-  "licensesUrl" : "https://github.com/onsemy/JJFramework/blob/master/LICENSE.md",
-  "dependencies": {
-    "com.neuecc.unirx" : "https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts",
-    "com.cysharp.unitask" : "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.unity.nuget.newtonsoft-json" : "3.2.1",
-    "com.unity.uiextensions" : "https://bitbucket.org/UnityUIExtensions/unity-ui-extensions.git"
- },
- "keywords": [
-    "JJFramework",
-    "onsemy"
-  ],
-  "author": {
-    "name": "Jeongjin Oh",
-    "email": "onsemy@gmail.com",
-    "url": "https://github.com/onsemy"
-  }
+    "name": "me.onsemy.jjframework",
+    "version": "0.0.1",
+    "displayName": "JJFramework",
+    "description": "Unity에서 자주 사용했던, 유용했던 코드를 모아놓은 프레임워크입니다.",
+    "unity": "2019.1",
+    "documentationUrl": "https://github.com/onsemy/JJFramework/blob/master/README.md",
+    "changelogUrl": "https://github.com/onsemy/JJFramework/blob/master/CHANGELOG.md",
+    "licensesUrl": "https://github.com/onsemy/JJFramework/blob/master/LICENSE.md",
+    "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1"
+    },
+    "keywords": [
+        "JJFramework", "onsemy"
+    ],
+    "author": {
+        "name": "Jeongjin Oh",
+        "email": "onsemy@gmail.com",
+        "url": "https://github.com/onsemy"
+    }
 }
