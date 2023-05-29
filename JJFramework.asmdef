@@ -1,11 +1,13 @@
 {
-    "name": "JJFramework.Runtime",
+    "name": "JJFramework",
     "references": [
         "JJFramework.Runtime.Attribute",
         "JJFramework.Runtime.Extension",
         "JJFramework.Runtime.Input",
         "JJFramework.Runtime.Resource",
-        "JJFramework.Runtime.UI"
+        "JJFramework.Runtime.UI",
+        "JJFramework.Editor.Batch",
+        "JJFramework.Editor.Extension"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
