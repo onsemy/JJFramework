@@ -1,0 +1,19 @@
+{
+    "name": "JJFramework.Runtime",
+    "references": [
+        "JJFramework.Runtime.Attribute",
+        "JJFramework.Runtime.Extension",
+        "JJFramework.Runtime.Input",
+        "JJFramework.Runtime.Resource",
+        "JJFramework.Runtime.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
