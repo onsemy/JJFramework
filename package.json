@@ -8,9 +8,10 @@
   "changelogUrl" : "https://github.com/onsemy/JJFramework/blob/master/CHANGELOG.md",
   "licensesUrl" : "https://github.com/onsemy/JJFramework/blob/master/LICENSE.md",
   "dependencies": {
-    "com.cysharp.unitask": "2.3.3",
+    "com.neuecc.unirx" : "https://github.com/neuecc/UniRx.git?path=Assets/Plugins/UniRx/Scripts",
+    "com.cysharp.unitask" : "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.unity.nuget.newtonsoft-json" : "3.2.1",
-    "com.unity.uiextensions": "2.1.0"
+    "com.unity.uiextensions" : "https://bitbucket.org/UnityUIExtensions/unity-ui-extensions.git"
  },
  "keywords": [
     "JJFramework",
