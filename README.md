@@ -1,3 +1,5 @@
+> 더 이상 지원하지 않을 예정입니다! [JJ4Unity](https://github.com/onsemy/JJ4Unity)를 대신 사용해주시기 바랍니다 :)
+
 # JJFramework
 
 ## 이것이 무엇인가요?
